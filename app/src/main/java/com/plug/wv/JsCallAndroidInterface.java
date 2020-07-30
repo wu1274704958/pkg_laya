@@ -45,4 +45,15 @@ public class JsCallAndroidInterface {
 
     }
 
+    @JavascriptInterface
+    public void dismiss(final String data) {
+        deliver.post(new Runnable() {
+            @Override
+            public void run() {
+                fullScreenDialog.dismiss();
+            }
+        });
+
+    }
+
 }

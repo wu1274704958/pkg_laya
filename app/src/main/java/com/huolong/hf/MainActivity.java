@@ -125,7 +125,6 @@ public class MainActivity extends Activity {
         Log.e(TAG,"root "+ root.getChildCount() + (root.getChildAt(0) instanceof ImageView));
 
         externCall = new ExternCall(mAgentWeb,this);
-
         mAgentWeb.getJsInterfaceHolder().addJavaObject("native_call", new JsCallAndroidInterface(mAgentWeb, this,cb));
         //mAgentWeb.getJsInterfaceHolder().addJavaObject()
     }
@@ -235,5 +234,23 @@ public class MainActivity extends Activity {
         //iv.setImageResource(R.drawable.loding);
 
         return view;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mAgentWeb.getWebLifeCycle().onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mAgentWeb.getWebLifeCycle().onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mAgentWeb.getWebLifeCycle().onDestroy();
     }
 }
