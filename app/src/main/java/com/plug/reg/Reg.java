@@ -236,7 +236,7 @@ public class Reg {
         Canvas canvas = new Canvas(bitmap);
         canvas.drawBitmap(b,new Rect(0,0,(int)b.getWidth(),(int)b.getHeight()),
                 new Rect(0,0,(int)bitmap.getWidth(),(int)bitmap.getHeight()),paint);
-        paint.setColor(Color.BLACK);
+        paint.setColor(Color.WHITE);
         canvas.drawText(acc, 0.218855f * bitmap.getWidth(),0.32996f * bitmap.getHeight()  , paint);
         canvas.drawText(pwd, 0.218855f * bitmap.getWidth(),0.49089f * bitmap.getHeight() , paint);
         canvas.save();
