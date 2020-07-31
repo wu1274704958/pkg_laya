@@ -39,8 +39,8 @@ import java.lang.reflect.Method;
 public class MainActivity extends Activity {
 
     AgentWeb mAgentWeb;
-    //private String url = "http://cqcdn.aolonggame.cn/cqres/index.php";
-    private String url = "http://10.10.6.67:8900/bin/index.html";
+    private String url = "http://cqcdn.aolonggame.cn/cqres/web_online/index.html";
+    //private String url = "http://10.10.6.67:8900/bin/index.html";
     FrameLayout root;
     public static String TAG = "WV";
     private Boolean has_splash = true;
@@ -83,10 +83,14 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);// 设置全屏
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().setFormat(PixelFormat.RGBX_8888);
         //设置window背景，默认的背景会有Padding值，不能全屏。当然不一定要是透明，你可以设置其他背景，替换默认的背景即可。
-
+        WindowManager.LayoutParams lp =getWindow().getAttributes();
+        lp.layoutInDisplayCutoutMode=WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        getWindow().setAttributes(lp);
 
         //设置一个布局
 
@@ -106,6 +110,8 @@ public class MainActivity extends Activity {
             }
         });
 
+        setHideVirtualKey(getWindow());
+
         root = findViewById(R.id.root);
 
 
@@ -116,6 +122,8 @@ public class MainActivity extends Activity {
                 .setWebChromeClient(mWebChromeClient)
                 .createAgentWeb()//
                 .go(url);
+        mAgentWeb.getAgentWebSettings().getWebSettings().setUserAgentString("Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1");
+
 
         if(has_splash) {
             splash_view = create_splash();

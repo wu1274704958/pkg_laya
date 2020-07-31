@@ -25,10 +25,20 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         android:requestLegacyExternalStorage="true"
-        android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">
+        android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
+
+        >
+        <meta-data android:name="android.notch_support" android:value="true"/>
+        <meta-data
+            android:name="android.max_aspect"
+            android:value="2.2"/>
+        <meta-data
+            android:name="notch.config"
+            android:value="portrait|landscape"/>
         <activity android:name=".MainActivity" android:screenOrientation="landscape"
             android:hardwareAccelerated="true"
-            android:configChanges="orientation|screenSize">
+            android:configChanges="orientation|screenSize"
+            android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
