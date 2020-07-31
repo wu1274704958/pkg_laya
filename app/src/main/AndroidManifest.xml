@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.huolong.hf">
+    package="one.chuanqi.online">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
@@ -35,7 +35,7 @@
         <meta-data
             android:name="notch.config"
             android:value="portrait|landscape"/>
-        <activity android:name=".MainActivity" android:screenOrientation="landscape"
+        <activity android:name="com.huolong.hf.MainActivity" android:screenOrientation="landscape"
             android:hardwareAccelerated="true"
             android:configChanges="orientation|screenSize"
             android:windowSoftInputMode="adjustPan">

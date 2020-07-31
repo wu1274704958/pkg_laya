@@ -1,6 +1,7 @@
 package com.huolong.hf;
 
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -20,6 +21,13 @@ import android.content.Context;
 
 
 import androidx.core.app.ActivityCompat;
+
+import com.bytedance.applog.AppLog;
+import com.bytedance.applog.GameReportHelper;
+import com.bytedance.applog.InitConfig;
+import com.bytedance.applog.util.UriConfig;
+import com.plug.oaid.DeviceIdUtils;
+import com.plug.oaid.Oaid;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -344,13 +352,29 @@ public class QuickSdk{
 
     }
 
-    public static void init_(Activity activity)
+    public static void init_(Activity activity_)
     {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+        try {
+            final InitConfig config = new InitConfig("182083", "huolong03");
+            config.setUriConfig(UriConfig.DEFAULT);
+            config.setEnablePlay(true);
+
+            AppLog.setEnableLog(true);
+
+            AppLog.init(activity_, config);
+            /* 初始化结束 */
+
+            // ⾃定义 “⽤⼾公共属性”（可选，初始化后调⽤, key相同会覆盖）
+            HashMap<String, Object> headerMap = new HashMap<String, Object>();
+            headerMap.put("level",8);
+            headerMap.put("gender","female");
+            AppLog.setHeaderInfo(headerMap);
+
+            AppLog.setUserUniqueID(DeviceIdUtils.getDeviceId(activity_));
+
+        }catch (Exception e)
         {
-
-        }else {
-
+            Logw.e("init err = " + e.toString());
         }
     }
 
@@ -422,6 +446,10 @@ public class QuickSdk{
     {
         try {
             switch (func) {
+                case FUNC_REGISTER:
+                {
+                    register(activity,args.getString(0));
+                }
                 case FUNC_LOGIN: {
                     login(activity);
                     break;
@@ -450,19 +478,10 @@ public class QuickSdk{
                     break;
                 }
                 case FUNC_PAY:{
-                    JSONObject oth = null;
-                    try{
-                        oth = args.getJSONObject(2);
-                    }catch (JSONException e)
-                    {
-                        oth = new JSONObject();
-                    }
-                    Logw.e("oth = " + oth.toString());
-
-                    SetGameRoleInfoEx exinfo = formJson(SetGameRoleInfoEx.class,oth);
                     pay(activity,
                             formJson(Order.class,args.getJSONObject(0)),
-                            formJson(ServerInfo.class,args.getJSONObject(1)),exinfo);
+                            formJson(ServerInfo.class,args.getJSONObject(1)),
+                            args.getJSONObject(2));
                     break;
                 }
                 case FUNC_BACK_PRESSED:{
@@ -476,16 +495,26 @@ public class QuickSdk{
         }
     }
 
+    private static void register(Activity activity, String string) {
+        GameReportHelper.onEventRegister(string,true);
+    }
+
     public static void login(Activity activity)
     {
         Logw.e("login b");
-
+        GameReportHelper.onEventLogin("",true);
         Logw.e("login e");
     }
 
-    public static void setGameRoleInfo(Activity activity,RoleInfo roleInfo,Boolean is_create,SetGameRoleInfoEx oths)
+    public static void setGameRoleInfo(Activity activity,RoleInfo info,Boolean is_create,SetGameRoleInfoEx oths)
     {
+        Logw.e("setGameRoleInfo exec");
 
+        if(is_create) {
+            GameReportHelper.onEventCreateGameRole(info.gameRoleID);
+        }else{
+            GameReportHelper.onEventUpdateLevel(Integer.parseInt(info.gameRoleLevel));
+        }
     }
 
     public static void logout(Activity activity)
@@ -498,9 +527,11 @@ public class QuickSdk{
 
     }
 
-    public static void pay(Activity activity,final Order order, ServerInfo serverInfo,SetGameRoleInfoEx oths)
-    {
+    public static void pay(Activity activity,final Order order, ServerInfo serverInfo,JSONObject oths) throws JSONException {
+        Logw.e("pay exec");
 
+        GameReportHelper.onEventPurchase("gift",order.goodsName,order.goodsID,
+                Integer.valueOf(order.count),oths.getString("channel"),"¥",true,Integer.valueOf(order.amount));
     }
 
     public static <T> T formJson(Class<T> tClass,JSONObject object) throws JSONException, InstantiationException, IllegalAccessException, InvocationTargetException {
@@ -625,13 +656,12 @@ public class QuickSdk{
         CustomData = new HashMap<>();
     }
 
-    public static void init(final Activity activity) {
-        try {
-
-
-        }catch (Exception e)
-        {
-            Logw.e("init err = " + e.toString());
+    public static void init(final Activity activity_) {
+        activity = activity_;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            activity_.requestPermissions(new String[]{Manifest.permission.READ_PHONE_STATE},1);
+        }else{
+            init_(activity_);
         }
 
     }
@@ -670,7 +700,7 @@ public class QuickSdk{
 
     public static void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
     {
-
+        gameActivity_onRequestPermissionsResult(activity,requestCode,permissions,grantResults);
     }
 
     public static void activityAttachBaseContext(Context context)

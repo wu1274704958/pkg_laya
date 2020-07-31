@@ -41,11 +41,16 @@ import org.json.JSONObject;
 
 import java.lang.reflect.Method;
 
+import one.chuanqi.online.BuildConfig;
+import one.chuanqi.online.R;
+
+import static android.webkit.WebSettings.LOAD_CACHE_ELSE_NETWORK;
+
 public class MainActivity extends Activity {
 
     AgentWeb mAgentWeb;
-    private String url = "http://cqcdn.aolonggame.cn/cqres/web_online/index.html";
-    //private String url = "http://10.10.6.67:8900/bin/index.html";
+    //private String url = "http://cqcdn.aolonggame.cn/cqres/web_online/index.html";
+    private String url = "http://10.10.6.67:8900/bin/index.html";
     FrameLayout root;
     public static String TAG = "WV";
     private Boolean has_splash = true;
@@ -94,10 +99,11 @@ public class MainActivity extends Activity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().setFormat(PixelFormat.RGBX_8888);
         //设置window背景，默认的背景会有Padding值，不能全屏。当然不一定要是透明，你可以设置其他背景，替换默认的背景即可。
-        WindowManager.LayoutParams lp =getWindow().getAttributes();
-        lp.layoutInDisplayCutoutMode=WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
-        getWindow().setAttributes(lp);
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            WindowManager.LayoutParams lp = getWindow().getAttributes();
+            lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+            getWindow().setAttributes(lp);
+        }
         //设置一个布局
 
         setContentView(  R.layout.activity_framelayout);
@@ -120,7 +126,7 @@ public class MainActivity extends Activity {
 
         root = findViewById(R.id.root);
 
-        QuickSdk.init_(this);
+        QuickSdk.init(this);
 
         mAgentWeb = AgentWeb.with(this)//传入Activity
                 .setAgentWebParent(root, root.getLayoutParams())//传入AgentWeb 的父控件 ，如果父控件为 RelativeLayout ， 那么第二参数需要传入 RelativeLayout.LayoutParams
@@ -129,7 +135,7 @@ public class MainActivity extends Activity {
                 .createAgentWeb()//
                 .go(url);
         mAgentWeb.getAgentWebSettings().getWebSettings().setUserAgentString("Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1");
-
+        mAgentWeb.getAgentWebSettings().getWebSettings().setCacheMode(LOAD_CACHE_ELSE_NETWORK);
 
         if(has_splash) {
             splash_view = create_splash();
