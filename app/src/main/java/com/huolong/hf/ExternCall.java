@@ -21,6 +21,7 @@ import com.plug.oaid.Oaid;
 import com.plug.reg.Reg;
 import com.plug.wv.WebView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -50,6 +51,8 @@ public class ExternCall {
 
     public static final int NetworkStatus = 11;
     public static final int BatteryStatus = 12;
+    public static final int CMD_QUICK_REG_NOTIF = 47;
+    public static final int CMD_QUICK_ACTION = 48;
 
     public ExternCall(AgentWeb web,Activity activity) {
         this.web = web;
@@ -110,7 +113,8 @@ public class ExternCall {
 
     public void call(int cmd,int id,JSONObject body,boolean is_destroy)
     {
-        add(id,new MyCB(web));
+        MyCB cb = new MyCB(web);
+        add(id,cb);
 
         switch (cmd)
         {
@@ -137,6 +141,29 @@ public class ExternCall {
                 break;
             case NetworkStatus:
                 new NetMonitor(id,my_handler,activity).monitor();
+                break;
+            case CMD_QUICK_REG_NOTIF:
+                Logw.e("CMD_QUICK_REG_NOTIF -----------------");
+                QuickSdk.NotifGameCmdId = id;
+                QuickSdk.init(activity,my_handler);
+                QuickSdk.notifGame(QuickSdk.NOTIF_INIT,QuickSdk.STATE_SUCCESS,new JSONObject());
+                break;
+            case CMD_QUICK_ACTION:
+                Logw.e("action " + body.toString());
+                int func = 0;
+                JSONArray arr = null;
+                try {
+                    func = body.getInt("func");
+                    if(body.has("args"))
+                        arr = body.getJSONArray("args");
+                }catch (JSONException e)
+                {
+                    //messageCallback("args error");
+                    Logw.e("args error" + e.getMessage());
+                    return;
+                }
+                Logw.e(func + "----------" + arr);
+                QuickSdk.gameCall(func,arr,cb);
                 break;
         }
 

@@ -1,10 +1,14 @@
 package com.huolong.hf;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.ColorDrawable;
@@ -13,6 +17,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
+import android.os.PersistableBundle;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
@@ -82,6 +87,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        QuickSdk.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);// 设置全屏
@@ -114,7 +120,7 @@ public class MainActivity extends Activity {
 
         root = findViewById(R.id.root);
 
-
+        QuickSdk.init_(this);
 
         mAgentWeb = AgentWeb.with(this)//传入Activity
                 .setAgentWebParent(root, root.getLayoutParams())//传入AgentWeb 的父控件 ，如果父控件为 RelativeLayout ， 那么第二参数需要传入 RelativeLayout.LayoutParams
@@ -248,17 +254,76 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         mAgentWeb.getWebLifeCycle().onResume();
+        QuickSdk.onResume(this);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mAgentWeb.getWebLifeCycle().onPause();
+        QuickSdk.onPause(this);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         mAgentWeb.getWebLifeCycle().onDestroy();
+        QuickSdk.onDestroy(this);
     }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        QuickSdk.gameActivity_onNewIntent(this,intent);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        QuickSdk.onRequestPermissionsResult(requestCode,permissions,grantResults);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        QuickSdk.onActivityResult(this,requestCode,resultCode,data);
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        QuickSdk.onBackPress();
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        QuickSdk.onRestart(this);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        QuickSdk.onStart(this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        QuickSdk.onStop(this);
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        QuickSdk.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        QuickSdk.onWindowFocusChanged(hasFocus);
+    }
+
+
 }
