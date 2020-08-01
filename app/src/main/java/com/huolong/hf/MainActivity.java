@@ -27,7 +27,12 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.ConsoleMessage;
 import android.webkit.JsResult;
+
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -57,6 +62,7 @@ public class MainActivity extends Activity {
     private boolean auto_hide_splash = false;
     ExternCall externCall;
     private View splash_view;
+    private LocalCacheMgr cacheMgr;
     FullScreenDialog.OnWVCb cb = new FullScreenDialog.OnWVCb() {
         @Override
         public void onDismiss() {
@@ -121,7 +127,7 @@ public class MainActivity extends Activity {
                 setHideVirtualKey(getWindow());
             }
         });
-
+        cacheMgr = new LocalCacheMgr(url,this);
         setHideVirtualKey(getWindow());
 
         root = findViewById(R.id.root);
@@ -132,10 +138,12 @@ public class MainActivity extends Activity {
                 .setAgentWebParent(root, root.getLayoutParams())//传入AgentWeb 的父控件 ，如果父控件为 RelativeLayout ， 那么第二参数需要传入 RelativeLayout.LayoutParams
                 .closeIndicator()
                 .setWebChromeClient(mWebChromeClient)
+                .setWebViewClient(mWebViewClient)
                 .createAgentWeb()//
                 .go(url);
         mAgentWeb.getAgentWebSettings().getWebSettings().setUserAgentString("Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1");
         mAgentWeb.getAgentWebSettings().getWebSettings().setCacheMode(LOAD_CACHE_ELSE_NETWORK);
+
 
         if(has_splash) {
             splash_view = create_splash();
@@ -225,6 +233,17 @@ public class MainActivity extends Activity {
         public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
             Log.e(TAG,"=======  " +  url );
             return false;
+        }
+    };
+
+    private com.just.agentweb.WebViewClient mWebViewClient = new com.just.agentweb.WebViewClient()
+    {
+        @Override
+        public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                return cacheMgr.shouldInterceptRequest(view,request);
+            }
+            return null;
         }
     };
 
