@@ -27,6 +27,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.ConsoleMessage;
 import android.webkit.JsResult;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -132,6 +133,7 @@ public class MainActivity extends Activity {
                 .go(url);
         mAgentWeb.getAgentWebSettings().getWebSettings().setUserAgentString("Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1");
         mAgentWeb.getAgentWebSettings().getWebSettings().setCacheMode(LOAD_CACHE_ELSE_NETWORK);
+        mAgentWeb.getAgentWebSettings().getWebSettings().setRenderPriority(WebSettings.RenderPriority.HIGH);
 
         if(has_splash) {
             splash_view = create_splash();
