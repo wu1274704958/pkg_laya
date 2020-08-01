@@ -186,7 +186,8 @@ public class MainActivity extends Activity {
                     e.printStackTrace();
                 }
             }
-            view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+            view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+            //view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
             view.getSettings().setAppCacheEnabled(true);
             return true;
         }

@@ -111,13 +111,15 @@ public class ExternCall {
         }
     }
 
-    public void call(int cmd,int id,JSONObject body,boolean is_destroy)
-    {
+    public void call(int cmd,int id,JSONObject body,boolean is_destroy) throws JSONException {
         MyCB cb = new MyCB(web);
         add(id,cb);
 
         switch (cmd)
         {
+            case 300:
+                Log.e(body.getString("tag"),body.getString("body"));
+                break;
             case 210:
                 Oaid.go(callbacks,id,body,activity);
                 break;
@@ -128,11 +130,7 @@ public class ExternCall {
                 WebView.go(callbacks,id,body,activity);
                 break;
             case 10:
-                try {
-                    Toast.makeText(activity,body.getString("msg"),body.getInt("dur")).show();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                Toast.makeText(activity,body.getString("msg"),body.getInt("dur")).show();
                 break;
             case BatteryStatus:
                 IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
