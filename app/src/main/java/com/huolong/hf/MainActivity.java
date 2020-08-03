@@ -17,6 +17,8 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.os.PersistableBundle;
 import android.util.Log;
@@ -26,6 +28,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.webkit.ConsoleMessage;
 import android.webkit.JsResult;
 
@@ -65,6 +69,7 @@ public class MainActivity extends Activity {
     private View splash_view;
     private LocalCacheMgr cacheMgr;
     private ContentLoadingProgressBar pb;
+    private Animation scale;
     FullScreenDialog.OnWVCb cb = new FullScreenDialog.OnWVCb() {
         @Override
         public void onDismiss() {
@@ -130,6 +135,9 @@ public class MainActivity extends Activity {
                 setHideVirtualKey(getWindow());
             }
         });
+
+        scale = AnimationUtils.loadAnimation(this,R.anim.up);
+
         cacheMgr = new LocalCacheMgr(url,this);
         setHideVirtualKey(getWindow());
 
@@ -166,8 +174,17 @@ public class MainActivity extends Activity {
     private void hide_splash()
     {
         if(splash_view != null) {
-            root.removeView(splash_view);
-        } root.invalidate();
+            splash_view.startAnimation(scale);
+            new Handler(getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    root.removeView(splash_view);
+                    //root.invalidate();
+                }
+            },scale.getDuration());
+
+        }
+
     }
 
     private WebChromeClient mWebChromeClient=new WebChromeClient(){
@@ -180,7 +197,7 @@ public class MainActivity extends Activity {
                 mAgentWeb.getIndicatorController().finish();
                 if(splash_view != null && auto_hide_splash) {
                     root.removeView(splash_view);
-                } root.invalidate();
+                } //root.invalidate();
 
             }else {
                 view.setBackgroundColor(Color.BLACK);
@@ -269,8 +286,8 @@ public class MainActivity extends Activity {
             uiOptions |= View.SYSTEM_UI_FLAG_LOW_PROFILE;
         }
         window.getDecorView().setSystemUiVisibility(uiOptions);
-        if(root != null)
-            root.invalidate();
+        //if(root != null)
+            //root.invalidate();
     }
 
     private View create_splash()
