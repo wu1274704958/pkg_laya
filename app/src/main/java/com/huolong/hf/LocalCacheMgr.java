@@ -32,11 +32,18 @@ public class LocalCacheMgr {
     private String head;
     private Activity activity;
     private String localDir;
+    private HashMap<String,Integer> st_map;
+    public static final Integer ST_WAIT = 0;
+    public static final Integer ST_IN_PROGRESS = 100;
+    public static final Integer ST_SUCCESS = 2;
+    public static final Integer ST_FAILED = 3;
+    public static final Integer ST_NULL = -1;
 
     public LocalCacheMgr(String url,Activity activity) {
         this.activity = activity;
         this.head = url.substring(0,url.lastIndexOf("/") + 1);
         localDir = activity.getFilesDir().getAbsolutePath();
+        st_map = new HashMap<>();
         Log.e(TAG,head);
     }
 
@@ -60,22 +67,47 @@ public class LocalCacheMgr {
                 return new WebResourceResponse(mime,"UTF-8",is);
             }
         }
-        //try {
-        //    String mime = request.getRequestHeaders().get("Accept");
-        //    String md5 = Hash.md5(url);
-        //    File f = new File(localDir + md5);
-        //    if(f.exists())
-        //    {
-        //        Log.e(TAG,"using cached file " + url + " " + md5 );
-        //        InputStream in = new FileInputStream(f);
-        //        return new WebResourceResponse(mime,"UTF-8",in);
-        //    }else{
-        //        Log.e(TAG,"download file " + url + " " + md5 );
-        //        download(url,mime,localDir,md5,null);
-        //    }
-        //} catch (Exception e) {
-        //    Log.e(TAG,e.getMessage());
-        //}
+        try {
+            if(
+                    url.endsWith(".png") || url.endsWith(".js") || url.endsWith(".mp3") ||
+                    url.endsWith(".jpg")  || url.endsWith(".dat") || url.endsWith(".txt") || url.endsWith(".wdp")
+            ) {
+                String mime = request.getRequestHeaders().get("Accept");
+                String md5 = Hash.md5(url);
+                File f = new File(localDir +"/"+ md5);
+                if(f.exists() || get_state(md5) == ST_SUCCESS )
+                {
+                    Log.e(TAG, "using cached file " + url + " " + md5);
+                    InputStream in = new FileInputStream(f);
+                    return new WebResourceResponse(mime, "UTF-8", in);
+                }else
+                if(get_state(md5) < 0)
+                {
+                    down(md5);
+                    Log.e(TAG, "download file " + url + " " + md5);
+                    download(url, mime, localDir, md5, new OnDownloadListener() {
+                        @Override
+                        public void onDownloadSuccess(File file, String name) {
+                            Log.e(TAG, "download success " + name);
+                            to_success(name);
+                        }
+
+                        @Override
+                        public void onDownloading(int progress, String name) {
+                            to_inprogress(name,progress);
+                        }
+
+                        @Override
+                        public void onDownloadFailed(Exception e, String name) {
+                            to_failed(name);
+                        }
+                    });
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG,e.getMessage());
+        }
+
         return null;
     }
 
@@ -89,7 +121,61 @@ public class LocalCacheMgr {
         }
     }
 
-    public void download(final String url,String mime,final String destFileDir, final String destFileName, final OnDownloadListener listener) {
+    public void down(String f)
+    {
+        synchronized (this)
+        {
+            if(!st_map.containsKey(f))
+            {
+                st_map.put(f,ST_WAIT);
+            }
+        }
+    }
+    public void to_failed(String f)
+    {
+        synchronized (this)
+        {
+            if(st_map.containsKey(f))
+            {
+                st_map.remove(f);
+            }
+        }
+    }
+    public void to_inprogress(String f,int v)
+    {
+        synchronized (this)
+        {
+            if(st_map.containsKey(f))
+            {
+                st_map.put(f,ST_IN_PROGRESS + v);
+            }
+        }
+    }
+    public void to_success(String f)
+    {
+        synchronized (this)
+        {
+            if(st_map.containsKey(f))
+            {
+                st_map.put(f,ST_SUCCESS);
+            }
+        }
+    }
+    public int get_state(String f)
+    {
+        synchronized (this)
+        {
+            if(st_map.containsKey(f))
+            {
+                return st_map.get(f);
+            }else
+            {
+                return -1;
+            }
+        }
+    }
+
+    public void download(String url,String mime,final String destFileDir, final String destFileName, final OnDownloadListener listener) {
 
         Request request = new Request.Builder()
                 .addHeader("User-Agent","Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1")
@@ -105,7 +191,7 @@ public class LocalCacheMgr {
             public void onFailure(Call call, IOException e) {
                 // 下载失败监听回调
                 if(listener != null)
-                    listener.onDownloadFailed(e);
+                    listener.onDownloadFailed(e,destFileName);
             }
 
             @Override
@@ -136,13 +222,13 @@ public class LocalCacheMgr {
                         int progress = (int) (sum * 1.0f / total * 100);
                         //下载中更新进度条
                         if(listener!=null)
-                            listener.onDownloading(progress);
+                            listener.onDownloading(progress,destFileName);
                     }
                     fos.flush();
                     //下载完成
-                    if(listener!=null)  listener.onDownloadSuccess(file);
+                    if(listener!=null)  listener.onDownloadSuccess(file,destFileName);
                 } catch (Exception e) {
-                    listener.onDownloadFailed(e);
+                    if(listener!=null) listener.onDownloadFailed(e,destFileName);
                 }finally {
 
                     try {
@@ -165,18 +251,18 @@ public class LocalCacheMgr {
         /**
          * 下载成功之后的文件
          */
-        void onDownloadSuccess(File file);
+        void onDownloadSuccess(File file,String name);
 
         /**
          * 下载进度
          */
-        void onDownloading(int progress);
+        void onDownloading(int progress,String name);
 
         /**
          * 下载异常信息
          */
 
-        void onDownloadFailed(Exception e);
+        void onDownloadFailed(Exception e,String name);
     }
 
 
