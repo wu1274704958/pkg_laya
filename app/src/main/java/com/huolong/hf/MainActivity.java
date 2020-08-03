@@ -3,6 +3,7 @@ package com.huolong.hf;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.widget.ContentLoadingProgressBar;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -58,6 +59,7 @@ public class MainActivity extends Activity {
     ExternCall externCall;
     private View splash_view;
     private LocalCacheMgr cacheMgr;
+    private ContentLoadingProgressBar pb;
     FullScreenDialog.OnWVCb cb = new FullScreenDialog.OnWVCb() {
         @Override
         public void onDismiss() {
@@ -66,7 +68,8 @@ public class MainActivity extends Activity {
 
         @Override
         public void onProcess(int p) {
-
+            if(pb!=null)
+                pb.setProgress(p);
         }
 
         @Override
@@ -143,6 +146,8 @@ public class MainActivity extends Activity {
 
         if(has_splash) {
             splash_view = create_splash();
+            pb = splash_view.findViewById(R.id.pb1);
+            Logw.e("pb == null = " + (pb == null));
             root.addView(splash_view,new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         }
 

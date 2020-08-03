@@ -33,13 +33,15 @@ public class LocalCacheMgr {
         if(url.startsWith(head))
         {
             String sub = url.substring(head.length());
+
             //Log.e(TAG,sub);
             InputStream is = open(sub);
             if(is != null)
             {
+
                 String mime = request.getRequestHeaders().get("Accept");
                 Log.e(TAG,"using cached file " + sub);
-                new WebResourceResponse(mime,"UTF-8",is);
+                return new WebResourceResponse(mime,"UTF-8",is);
             }
         }
         return null;
