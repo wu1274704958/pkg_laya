@@ -3,6 +3,7 @@ package com.huolong.hf;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.widget.ContentLoadingProgressBar;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -54,8 +55,8 @@ import static android.webkit.WebSettings.LOAD_CACHE_ELSE_NETWORK;
 public class MainActivity extends Activity {
 
     AgentWeb mAgentWeb;
-    //private String url = "http://cqcdn.aolonggame.cn/cqres/web_online/index.html";
-    private String url = "http://10.10.6.67:8900/bin/index.html";
+    private String url = "http://cqcdn.aolonggame.cn/cqres/web_online/index.html";
+    //private String url = "http://10.10.6.67:8900/bin/index.html";
     FrameLayout root;
     public static String TAG = "WV";
     private Boolean has_splash = true;
@@ -63,6 +64,7 @@ public class MainActivity extends Activity {
     ExternCall externCall;
     private View splash_view;
     private LocalCacheMgr cacheMgr;
+    private ContentLoadingProgressBar pb;
     FullScreenDialog.OnWVCb cb = new FullScreenDialog.OnWVCb() {
         @Override
         public void onDismiss() {
@@ -71,7 +73,8 @@ public class MainActivity extends Activity {
 
         @Override
         public void onProcess(int p) {
-
+            if(pb!=null)
+                pb.setProgress(p);
         }
 
         @Override
@@ -143,10 +146,13 @@ public class MainActivity extends Activity {
                 .go(url);
         mAgentWeb.getAgentWebSettings().getWebSettings().setUserAgentString("Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1");
         mAgentWeb.getAgentWebSettings().getWebSettings().setCacheMode(LOAD_CACHE_ELSE_NETWORK);
+        mAgentWeb.getAgentWebSettings().getWebSettings().setRenderPriority(WebSettings.RenderPriority.HIGH);
 
 
         if(has_splash) {
             splash_view = create_splash();
+            pb = splash_view.findViewById(R.id.pb1);
+            Logw.e("pb == null = " + (pb == null));
             root.addView(splash_view,new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         }
 
