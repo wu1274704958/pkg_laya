@@ -59,7 +59,7 @@ import static android.webkit.WebSettings.LOAD_CACHE_ELSE_NETWORK;
 public class MainActivity extends Activity {
 
     AgentWeb mAgentWeb;
-    private String url = "http://cqcdn.aolonggame.cn/cqres/web_online/index.html";
+    private String url = "http://cqcdn.aolonggame.cn/cqres/web_online/index.php";
     //private String url = "http://10.10.6.67:8900/bin/index.html";
     FrameLayout root;
     public static String TAG = "WV";
