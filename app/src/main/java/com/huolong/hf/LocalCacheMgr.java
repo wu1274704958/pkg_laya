@@ -197,6 +197,7 @@ public class LocalCacheMgr {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
 
+                boolean success = false;
                 InputStream is = null;
                 byte[] buf = new byte[1024 * 64];
                 int len = 0;
@@ -225,9 +226,11 @@ public class LocalCacheMgr {
                             listener.onDownloading(progress,destFileName);
                     }
                     fos.flush();
+                    success = true;
                     //下载完成
                     if(listener!=null)  listener.onDownloadSuccess(file,destFileName);
                 } catch (Exception e) {
+                    success = false;
                     if(listener!=null) listener.onDownloadFailed(e,destFileName);
                 }finally {
 
@@ -238,6 +241,9 @@ public class LocalCacheMgr {
                         if (fos != null) {
                             fos.close();
                         }
+                        if(!success)
+                            file.delete();
+
                     } catch (IOException e) {
 
                     }
