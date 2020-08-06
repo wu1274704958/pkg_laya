@@ -8,11 +8,13 @@ import androidx.core.widget.ContentLoadingProgressBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.ColorDrawable;
+import android.inputmethodservice.Keyboard;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
@@ -23,6 +25,7 @@ import android.os.Message;
 import android.os.PersistableBundle;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,6 +44,7 @@ import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.just.agentweb.AgentWeb;
 import com.just.agentweb.WebChromeClient;
@@ -60,6 +64,7 @@ public class MainActivity extends Activity {
 
     AgentWeb mAgentWeb;
     private String url = "http://cqcdn.aolonggame.cn/cqres/web_online/index.php";
+    //private String url = "http://47.102.115.132:8081/cqres/web_online/index.php";
     //private String url = "http://10.10.6.67:8900/bin/index.html";
     FrameLayout root;
     public static String TAG = "WV";
@@ -372,6 +377,47 @@ public class MainActivity extends Activity {
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         QuickSdk.onWindowFocusChanged(hasFocus);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if(keyCode == KeyEvent.KEYCODE_BACK)
+        {
+            hook_back();
+            return  true;
+        }
+        return super.onKeyDown(keyCode,event);
+    }
+
+    public void hook_back()
+    {
+
+        TextView tv = new TextView(this);
+        tv.setText("确定要退出游戏吗?");
+        tv.setTextColor(getResources().getColor( R.color.colorPrimaryDark) );
+        tv.setTextSize(16.f);
+        tv.setPadding(39,5,5,5);
+
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this,R.style.dialog);
+        AlertDialog dialog = builder.setCancelable(true)
+                .setPositiveButton("退出", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        MainActivity.this.finish();
+                    }
+                })
+                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                })
+                .setView(tv)
+                //.setMessage("确定要退出游戏吗?")
+                .setTitle("提示")
+                .create();
+        dialog.show();
     }
 
 
