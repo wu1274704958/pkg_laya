@@ -17,6 +17,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 
@@ -83,9 +86,12 @@ public class LocalCacheMgr {
                 }else
                 if(get_state(md5) < 0)
                 {
+                    final PipedOutputStream out = new PipedOutputStream();
+                    PipedInputStream in = new PipedInputStream(out);
+
                     down(md5);
                     Log.e(TAG, "download file " + url + " " + md5);
-                    download(url, mime, localDir, md5, new OnDownloadListener() {
+                    download(out,url, mime, localDir, md5, new OnDownloadListener() {
                         @Override
                         public void onDownloadSuccess(File file, String name) {
                             Log.e(TAG, "download success " + name);
@@ -99,9 +105,12 @@ public class LocalCacheMgr {
 
                         @Override
                         public void onDownloadFailed(Exception e, String name) {
+                            Log.e(TAG, "download failed " + e.getMessage()  + "\n" + name);
                             to_failed(name);
                         }
                     });
+
+                    return new WebResourceResponse(mime, "UTF-8", in);
                 }
             }
         } catch (Exception e) {
@@ -175,7 +184,7 @@ public class LocalCacheMgr {
         }
     }
 
-    public void download(String url,String mime,final String destFileDir, final String destFileName, final OnDownloadListener listener) {
+    public void download(final OutputStream out, String url, String mime, final String destFileDir, final String destFileName, final OnDownloadListener listener) {
 
         Request request = new Request.Builder()
                 .addHeader("User-Agent","Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1")
@@ -189,6 +198,12 @@ public class LocalCacheMgr {
         okHttpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
+                try {
+                    out.flush();
+                    out.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
                 // 下载失败监听回调
                 if(listener != null)
                     listener.onDownloadFailed(e,destFileName);
@@ -201,6 +216,21 @@ public class LocalCacheMgr {
                 InputStream is = null;
                 byte[] buf = new byte[1024 * 64];
                 int len = 0;
+
+                if(response.code() != 200)
+                {
+                    try {
+                        out.flush();
+                        out.close();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                    // 下载失败监听回调
+                    if(listener != null)
+                        listener.onDownloadFailed(new Exception("failed code = " + response.code()),destFileName);
+                    return;
+                }
+
                 FileOutputStream fos = null;
 
                 //储存下载文件的目录
@@ -219,6 +249,7 @@ public class LocalCacheMgr {
                     long sum = 0;
                     while ((len = is.read(buf)) != -1) {
                         fos.write(buf, 0, len);
+                        out.write(buf,0,len);
                         sum += len;
                         int progress = (int) (sum * 1.0f / total * 100);
                         //下载中更新进度条
@@ -226,10 +257,12 @@ public class LocalCacheMgr {
                             listener.onDownloading(progress,destFileName);
                     }
                     fos.flush();
+                    out.flush();
                     success = true;
                     //下载完成
                     if(listener!=null)  listener.onDownloadSuccess(file,destFileName);
                 } catch (Exception e) {
+                    out.flush();
                     success = false;
                     if(listener!=null) listener.onDownloadFailed(e,destFileName);
                 }finally {
@@ -241,6 +274,7 @@ public class LocalCacheMgr {
                         if (fos != null) {
                             fos.close();
                         }
+                        out.close();
                         if(!success)
                             file.delete();
 
