@@ -27,6 +27,7 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -46,6 +47,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.huolong.hf.utils.SpUtil;
+import com.huolong.hf.uu.TriangleGesture;
+import com.huolong.hf.uu.IpDialog;
+import com.huolong.hf.uu.Gesture;
 import com.just.agentweb.AgentWeb;
 import com.just.agentweb.WebChromeClient;
 import com.plug.wv.FullScreenDialog;
@@ -55,10 +60,8 @@ import org.json.JSONObject;
 
 import java.lang.reflect.Method;
 
-import one.chuanqi.online.BuildConfig;
-import one.chuanqi.online.R;
+import one.chuanqi.online.test.R;
 
-import static android.webkit.WebSettings.LOAD_CACHE_ELSE_NETWORK;
 
 public class MainActivity extends Activity {
 
@@ -76,6 +79,8 @@ public class MainActivity extends Activity {
     private ContentLoadingProgressBar pb;
     private Animation scale;
     private AlertDialog exit_dialog;
+    private TriangleGesture triangleGesture;
+    private static final String DEBUG_IP_KEY = "DEBUG_IP_KEY";
     FullScreenDialog.OnWVCb cb = new FullScreenDialog.OnWVCb() {
         @Override
         public void onDismiss() {
@@ -112,6 +117,41 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        SpUtil.init(this);
+        triangleGesture = new TriangleGesture(new Gesture.OnAppear() {
+
+            public void onAppear() {
+                AlertDialog dialog = IpDialog.getDialog(MainActivity.this,"保存并重启");
+                dialog.show();
+            }
+        });
+
+        IpDialog.setOnGetIp(new IpDialog.OnGetIp() {
+
+            public void onGetIp(String ip, String port) {
+                Log.e("===",ip + ":" +port);
+                if(ip.charAt(0) == '@')
+                    SpUtil.save(DEBUG_IP_KEY,ip);
+                else
+                    SpUtil.save(DEBUG_IP_KEY,ip +":"+ port);
+                MainActivity.this.finish();
+                MainActivity.this.startActivity(new Intent(MainActivity.this,MainActivity.class));
+            }
+        });
+        String URL = null;
+        String ip = SpUtil.get(DEBUG_IP_KEY);
+        if(!ip.isEmpty())
+        {
+            if(ip.charAt(0) == '@'){
+                URL = url;
+            }else
+            {
+                URL = "http://" + ip + "/bin/index.html";
+            }
+        }else
+        {URL = url;}
+
         QuickSdk.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
@@ -157,7 +197,7 @@ public class MainActivity extends Activity {
                 .setWebChromeClient(mWebChromeClient)
                 .setWebViewClient(mWebViewClient)
                 .createAgentWeb()//
-                .go(url);
+                .go(URL);
         mAgentWeb.getAgentWebSettings().getWebSettings().setUserAgentString("Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1");
         mAgentWeb.getAgentWebSettings().getWebSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
         mAgentWeb.getAgentWebSettings().getWebSettings().setRenderPriority(WebSettings.RenderPriority.HIGH);
@@ -419,6 +459,16 @@ public class MainActivity extends Activity {
                     .create();
         }
         exit_dialog.show();
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        //if(BuildConfig.DEBUG)
+        {
+            //Logw.e("onTouch---");
+            triangleGesture.handleEvent(ev);
+        }
+        return super.dispatchTouchEvent(ev);
     }
 
 
