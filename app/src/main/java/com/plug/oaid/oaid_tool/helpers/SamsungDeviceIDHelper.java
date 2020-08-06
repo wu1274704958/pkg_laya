@@ -35,7 +35,7 @@ public class SamsungDeviceIDHelper {
 
     Intent intent = new Intent();
     intent.setClassName("com.samsung.android.deviceidservice", "com.samsung.android.deviceidservice.DeviceIdService");
-    boolean isBinded = mContext.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+    boolean isBinded = mContext.getApplicationContext().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     if (isBinded) {
       try {
         IBinder iBinder = linkedBlockingQueue.take();
