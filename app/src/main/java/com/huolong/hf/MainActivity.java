@@ -75,6 +75,7 @@ public class MainActivity extends Activity {
     private LocalCacheMgr cacheMgr;
     private ContentLoadingProgressBar pb;
     private Animation scale;
+    private AlertDialog exit_dialog;
     FullScreenDialog.OnWVCb cb = new FullScreenDialog.OnWVCb() {
         @Override
         public void onDismiss() {
@@ -391,33 +392,33 @@ public class MainActivity extends Activity {
 
     public void hook_back()
     {
+        if(exit_dialog == null) {
+            TextView tv = new TextView(this);
+            tv.setText("确定要退出游戏吗?");
+            tv.setTextColor(getResources().getColor( R.color.colorPrimaryDark) );
+            tv.setTextSize(16.f);
+            tv.setPadding(39,5,5,5);
 
-        TextView tv = new TextView(this);
-        tv.setText("确定要退出游戏吗?");
-        tv.setTextColor(getResources().getColor( R.color.colorPrimaryDark) );
-        tv.setTextSize(16.f);
-        tv.setPadding(39,5,5,5);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.dialog);
+            exit_dialog = builder.setCancelable(true)
+                    .setPositiveButton("退出", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            MainActivity.this.finish();
+                        }
+                    })
+                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
 
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this,R.style.dialog);
-        AlertDialog dialog = builder.setCancelable(true)
-                .setPositiveButton("退出", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        MainActivity.this.finish();
-                    }
-                })
-                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        dialogInterface.dismiss();
-                    }
-                })
-                .setView(tv)
-                //.setMessage("确定要退出游戏吗?")
-                .setTitle("提示")
-                .create();
-        dialog.show();
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                        }
+                    })
+                    .setView(tv)
+                    //.setMessage("确定要退出游戏吗?")
+                    .setTitle("提示")
+                    .create();
+        }
+        exit_dialog.show();
     }
 
 
