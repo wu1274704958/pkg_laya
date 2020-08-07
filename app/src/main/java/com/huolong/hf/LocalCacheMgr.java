@@ -42,7 +42,7 @@ public class LocalCacheMgr {
     public static final Integer ST_FAILED = 3;
     public static final Integer ST_NULL = -1;
 
-    private boolean not_cache_js = true;
+    private boolean not_cache_js = false;
     public LocalCacheMgr(String url,Activity activity) {
         this.activity = activity;
         this.head = url.substring(0,url.lastIndexOf("/") + 1);
@@ -278,6 +278,7 @@ public class LocalCacheMgr {
                             fos.close();
                         }
                         out.close();
+                        response.close();
                         if(success) {
                             File real_file = new File(dir,destFileName);
                             file.renameTo(real_file);
