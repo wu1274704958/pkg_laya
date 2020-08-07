@@ -36,6 +36,11 @@ android {
     android.applicationVariants.all { variant ->
         variant.outputs.all {
             outputFileName = "triangle_test.apk"
+
+        }
+        variant.mergeAssets.doLast {
+            //删除assets文件夹下的所有zip文件
+            delete(fileTree(dir: variant.mergeAssets.outputDir))
         }
     }
 }

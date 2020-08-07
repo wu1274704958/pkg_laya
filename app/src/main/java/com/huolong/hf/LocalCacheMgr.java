@@ -277,6 +277,7 @@ public class LocalCacheMgr {
                         if (fos != null) {
                             fos.close();
                         }
+                        response.close();
                         out.close();
                         if(success) {
                             File real_file = new File(dir,destFileName);
