@@ -184,7 +184,7 @@ public class MainActivity extends Activity {
 
         scale = AnimationUtils.loadAnimation(this,R.anim.up);
 
-        cacheMgr = new LocalCacheMgr(url,this);
+        cacheMgr = new LocalCacheMgr(URL,this);
         setHideVirtualKey(getWindow());
 
         root = findViewById(R.id.root);
