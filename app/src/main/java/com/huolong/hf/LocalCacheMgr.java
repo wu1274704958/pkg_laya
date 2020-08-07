@@ -42,6 +42,7 @@ public class LocalCacheMgr {
     public static final Integer ST_FAILED = 3;
     public static final Integer ST_NULL = -1;
 
+    private boolean not_cache_js = true;
     public LocalCacheMgr(String url,Activity activity) {
         this.activity = activity;
         this.head = url.substring(0,url.lastIndexOf("/") + 1);
@@ -72,7 +73,7 @@ public class LocalCacheMgr {
         }
         try {
             if(
-                    url.endsWith(".png") || url.endsWith(".js") || url.endsWith(".mp3") ||
+                    url.endsWith(".png") || ( !not_cache_js && url.endsWith(".js")) || url.endsWith(".mp3") ||
                     url.endsWith(".jpg")  || url.endsWith(".dat") || url.endsWith(".txt") || url.endsWith(".wdp")
             ) {
                 String mime = request.getRequestHeaders().get("Accept");
@@ -235,10 +236,12 @@ public class LocalCacheMgr {
 
                 //储存下载文件的目录
                 File dir = new File(destFileDir);
-                if (!dir.exists()) {
+                File temp_dir = new File(destFileDir + "/temp");
+                if(!temp_dir.exists())
+                    temp_dir.mkdirs();
+                if (!dir.exists())
                     dir.mkdirs();
-                }
-                File file = new File(dir, destFileName);
+                File file = new File(temp_dir, destFileName);
                 if(!file.exists())
                     file.createNewFile();
                 try {
@@ -260,7 +263,7 @@ public class LocalCacheMgr {
                     out.flush();
                     success = true;
                     //下载完成
-                    if(listener!=null)  listener.onDownloadSuccess(file,destFileName);
+
                 } catch (Exception e) {
                     out.flush();
                     success = false;
@@ -275,8 +278,13 @@ public class LocalCacheMgr {
                             fos.close();
                         }
                         out.close();
-                        if(!success)
+                        if(success) {
+                            File real_file = new File(dir,destFileName);
+                            file.renameTo(real_file);
+                            if(listener!=null)  listener.onDownloadSuccess(file,destFileName);
+                        }else {
                             file.delete();
+                        }
 
                     } catch (IOException e) {
 
