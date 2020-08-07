@@ -33,11 +33,38 @@ import okhttp3.Response;
 
 
 public class LocalCacheMgr {
+
+    private static class State{
+        int st = ST_NULL;
+        long len = 0;
+
+        public State(int st) {
+            this.len = 0;
+            this.st = st;
+        }
+
+        public State(int st,long len) {
+            this.len = len;
+            this.st = st;
+        }
+
+        public void set_state(int st)
+        {
+            this.len = 0;
+            this.st = st;
+        }
+        public void set_state(int st,long l)
+        {
+            this.len = l;
+            this.st = st;
+        }
+    }
+
     private static final String TAG = "LocalCacheMgr";
     private String head;
     private Activity activity;
     private String localDir;
-    private HashMap<String,Integer> st_map;
+    private HashMap<String,State> st_map;
     public static final Integer ST_WAIT = 0;
     public static final Integer ST_IN_PROGRESS = 100;
     public static final Integer ST_SUCCESS = 2;
@@ -145,7 +172,7 @@ public class LocalCacheMgr {
         {
             if(!st_map.containsKey(f))
             {
-                st_map.put(f,ST_WAIT);
+                st_map.put(f,new State(ST_WAIT));
             }
         }
     }
@@ -165,7 +192,7 @@ public class LocalCacheMgr {
         {
             if(st_map.containsKey(f))
             {
-                st_map.put(f,ST_IN_PROGRESS + v);
+                st_map.get(f).set_state(ST_IN_PROGRESS + v);
             }
         }
     }
@@ -175,7 +202,7 @@ public class LocalCacheMgr {
         {
             if(st_map.containsKey(f))
             {
-                st_map.put(f,ST_SUCCESS);
+                st_map.get(f).set_state(ST_SUCCESS);
             }
         }
     }
@@ -185,7 +212,7 @@ public class LocalCacheMgr {
         {
             if(st_map.containsKey(f))
             {
-                return st_map.get(f);
+                return st_map.get(f).st;
             }else
             {
                 return -1;
@@ -198,7 +225,17 @@ public class LocalCacheMgr {
         {
             if(st_map.containsKey(f))
             {
-                st_map.put(f,ST_RETRY + v);
+                st_map.get(f).set_state(ST_RETRY + v);
+            }
+        }
+    }
+    public void set_retry(String f,int v,long l)
+    {
+        synchronized (this)
+        {
+            if(st_map.containsKey(f))
+            {
+                st_map.get(f).set_state(ST_RETRY + v,l);
             }
         }
     }
@@ -208,7 +245,7 @@ public class LocalCacheMgr {
         {
             if(st_map.containsKey(f))
             {
-                int st = st_map.get(f);
+                int st = st_map.get(f).st;
                 if(st >= ST_RETRY)
                     return st - ST_RETRY;
                 else
@@ -216,6 +253,23 @@ public class LocalCacheMgr {
             }else
             {
                 return -1;
+            }
+        }
+    }
+    public long get_retry_len(String f)
+    {
+        synchronized (this)
+        {
+            if(st_map.containsKey(f))
+            {
+                int st = st_map.get(f).st;
+                if(st >= ST_RETRY)
+                    return st_map.get(f).len;
+                else
+                    return 0;
+            }else
+            {
+                return 0;
             }
         }
     }
@@ -234,7 +288,7 @@ public class LocalCacheMgr {
         okHttpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                if(!retry(e.getMessage(),out,url,mime,destFileDir,destFileName,listener,0)) {
+                if(!retry(e.getMessage(),out,url,mime,destFileDir,destFileName,listener,0,0)) {
                     try {
                         out.flush();
                         out.close();
@@ -253,14 +307,15 @@ public class LocalCacheMgr {
                 boolean success = false;
                 boolean is_retry = false;
                 InputStream is = null;
-                byte[] buf = new byte[1024 * 64];
+                final int MaxLen = 1024 * 64;
+                byte[] buf = new byte[MaxLen];
                 int len = 0;
 
                 if(response.code() != 200)
                 {
                     response.close();
                     String reason = "failed code = " + response.code();
-                    if(!retry(reason,out,url,mime,destFileDir,destFileName,listener,0)) {
+                    if(!retry(reason,out,url,mime,destFileDir,destFileName,listener,0,0)) {
                         try {
                             out.flush();
                             out.close();
@@ -286,12 +341,27 @@ public class LocalCacheMgr {
                 File file = new File(temp_dir, destFileName);
                 if(!file.exists())
                     file.createNewFile();
+
+                long sum = 0;
+                long real_sum = get_retry_len(destFileName);
                 try {
 
                     is = response.body().byteStream();
                     long total = response.body().contentLength();
                     fos = new FileOutputStream(file);
-                    long sum = 0;
+
+                    if(real_sum > sum)
+                    {
+                        long t_len = 0;
+                        while(real_sum != sum)
+                        {
+                            long r_len = real_sum - sum > MaxLen ? MaxLen : real_sum - sum;
+                            t_len = is.read(buf,0, (int) r_len);
+                            fos.write(buf,0, (int) t_len);
+                            sum += t_len;
+                        }
+                    }
+
                     while ((len = is.read(buf)) != -1) {
                         fos.write(buf, 0, len);
                         out.write(buf,0,len);
@@ -307,9 +377,12 @@ public class LocalCacheMgr {
                     //下载完成
 
                 } catch (Exception e) {
-                    out.flush();
                     success = false;
-                    if(listener!=null) listener.onDownloadFailed(e,destFileName);
+                    if(!(is_retry = retry(e.getMessage(),out,url,mime,destFileDir,destFileName,listener,5,sum)))
+                    {
+                        out.flush();
+                        if(listener!=null) listener.onDownloadFailed(e,destFileName);
+                    }
                 }finally {
 
                     try {
@@ -319,7 +392,8 @@ public class LocalCacheMgr {
                         if (fos != null) {
                             fos.close();
                         }
-                        out.close();
+                        if(success || !is_retry)
+                            out.close();
                         response.close();
                         if(success) {
                             File real_file = new File(dir,destFileName);
@@ -337,12 +411,15 @@ public class LocalCacheMgr {
         });
     }
 
-    private boolean retry(String reason, final OutputStream out, final String url, final String mime, final String destFileDir, final String destFileName, final OnDownloadListener listener, int lazy_ms)
+    private boolean retry(String reason, final OutputStream out, final String url, final String mime, final String destFileDir, final String destFileName,
+                          final OnDownloadListener listener, int lazy_ms,long pos)
     {
         int v = get_retry(destFileName);
+        if(pos < get_retry_len(destFileName))
+            return false;
         if(v >= 0 && v <= MAX_RETRY){
-            set_retry(destFileName,v + 1);
-            Log.e(TAG,reason + " retry "+ (v+1) + " url " + url);
+            set_retry(destFileName,v + 1,pos);
+            Log.e(TAG,reason + " retry "+ (v+1) + " pos = " + pos  + " url " + url);
             if(lazy_ms > 0)
             {
                 handler.postDelayed(new Runnable() {
