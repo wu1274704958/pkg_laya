@@ -3,6 +3,8 @@ package com.huolong.hf;
 import android.app.Activity;
 import android.nfc.Tag;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -41,6 +43,10 @@ public class LocalCacheMgr {
     public static final Integer ST_SUCCESS = 2;
     public static final Integer ST_FAILED = 3;
     public static final Integer ST_NULL = -1;
+    public static final Integer ST_RETRY = 200;
+
+    public static final Integer MAX_RETRY = 10;
+    private Handler handler = new Handler(Looper.getMainLooper());
 
     private boolean not_cache_js = false;
     public LocalCacheMgr(String url,Activity activity) {
@@ -92,24 +98,7 @@ public class LocalCacheMgr {
 
                     down(md5);
                     Log.e(TAG, "download file " + url + " " + md5);
-                    download(out,url, mime, localDir, md5, new OnDownloadListener() {
-                        @Override
-                        public void onDownloadSuccess(File file, String name) {
-                            Log.e(TAG, "download success " + name);
-                            to_success(name);
-                        }
-
-                        @Override
-                        public void onDownloading(int progress, String name) {
-                            to_inprogress(name,progress);
-                        }
-
-                        @Override
-                        public void onDownloadFailed(Exception e, String name) {
-                            Log.e(TAG, "download failed " + e.getMessage()  + "\n" + name);
-                            to_failed(name);
-                        }
-                    });
+                    download(out,url, mime, localDir, md5, downloadListener);
 
                     return new WebResourceResponse(mime, "UTF-8", in);
                 }
@@ -120,6 +109,25 @@ public class LocalCacheMgr {
 
         return null;
     }
+
+    public OnDownloadListener downloadListener = new OnDownloadListener() {
+        @Override
+        public void onDownloadSuccess(File file, String name) {
+            Log.e(TAG, "download success " + name);
+            to_success(name);
+        }
+
+        @Override
+        public void onDownloading(int progress, String name) {
+            to_inprogress(name,progress);
+        }
+
+        @Override
+        public void onDownloadFailed(Exception e, String name) {
+            Log.e(TAG, "download failed " + e.getMessage()  + "\n" + name);
+            to_failed(name);
+        }
+    };
 
     public InputStream open(String s)
     {
@@ -184,8 +192,35 @@ public class LocalCacheMgr {
             }
         }
     }
+    public void set_retry(String f,int v)
+    {
+        synchronized (this)
+        {
+            if(st_map.containsKey(f))
+            {
+                st_map.put(f,ST_RETRY + v);
+            }
+        }
+    }
+    public int get_retry(String f)
+    {
+        synchronized (this)
+        {
+            if(st_map.containsKey(f))
+            {
+                int st = st_map.get(f);
+                if(st >= ST_RETRY)
+                    return st - ST_RETRY;
+                else
+                    return 0;
+            }else
+            {
+                return -1;
+            }
+        }
+    }
 
-    public void download(final OutputStream out, String url, String mime, final String destFileDir, final String destFileName, final OnDownloadListener listener) {
+    public void download(final OutputStream out, final String url, final String mime, final String destFileDir, final String destFileName, final OnDownloadListener listener) {
 
         Request request = new Request.Builder()
                 .addHeader("User-Agent","Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1")
@@ -199,27 +234,7 @@ public class LocalCacheMgr {
         okHttpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                try {
-                    out.flush();
-                    out.close();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-                // 下载失败监听回调
-                if(listener != null)
-                    listener.onDownloadFailed(e,destFileName);
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-
-                boolean success = false;
-                InputStream is = null;
-                byte[] buf = new byte[1024 * 64];
-                int len = 0;
-
-                if(response.code() != 200)
-                {
+                if(!retry(e.getMessage(),out,url,mime,destFileDir,destFileName,listener,0)) {
                     try {
                         out.flush();
                         out.close();
@@ -227,8 +242,35 @@ public class LocalCacheMgr {
                         ex.printStackTrace();
                     }
                     // 下载失败监听回调
-                    if(listener != null)
-                        listener.onDownloadFailed(new Exception("failed code = " + response.code()),destFileName);
+                    if (listener != null)
+                        listener.onDownloadFailed(e, destFileName);
+                }
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+
+                boolean success = false;
+                boolean is_retry = false;
+                InputStream is = null;
+                byte[] buf = new byte[1024 * 64];
+                int len = 0;
+
+                if(response.code() != 200)
+                {
+                    response.close();
+                    String reason = "failed code = " + response.code();
+                    if(!retry(reason,out,url,mime,destFileDir,destFileName,listener,0)) {
+                        try {
+                            out.flush();
+                            out.close();
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                        // 下载失败监听回调
+                        if (listener != null)
+                            listener.onDownloadFailed(new Exception(reason), destFileName);
+                    }
                     return;
                 }
 
@@ -293,6 +335,27 @@ public class LocalCacheMgr {
                 }
             }
         });
+    }
+
+    private boolean retry(String reason, final OutputStream out, final String url, final String mime, final String destFileDir, final String destFileName, final OnDownloadListener listener, int lazy_ms)
+    {
+        int v = get_retry(destFileName);
+        if(v >= 0 && v <= MAX_RETRY){
+            set_retry(destFileName,v + 1);
+            Log.e(TAG,reason + " retry "+ (v+1) + " url " + url);
+            if(lazy_ms > 0)
+            {
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        download(out,url,mime,destFileDir,destFileName,listener);
+                    }
+                },lazy_ms);
+            }else
+                download(out,url,mime,destFileDir,destFileName,listener);
+            return true;
+        }
+        return false;
     }
 
     public interface OnDownloadListener{
