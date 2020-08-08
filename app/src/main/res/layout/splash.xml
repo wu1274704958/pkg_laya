@@ -18,13 +18,10 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-
             >
-
-
                 <androidx.core.widget.ContentLoadingProgressBar
-                    android:layout_centerVertical="true"
-                    android:layout_centerHorizontal="true"
+                    android:layout_toLeftOf="@id/sp_tv"
+                    android:layout_alignParentBottom="true"
                     android:id="@+id/pb1"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
@@ -35,6 +32,31 @@
                     android:indeterminateOnly="false"
                     style="@style/Widget.AppCompat.ProgressBar"
                     />
+            <TextView
+                android:id="@+id/sp_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="26sp"
+                android:textColor="@color/colorPrimaryDark"
+                android:text="加载中"
+                android:layout_toLeftOf="@id/sp_tv2"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="8dp"
+                android:layout_marginRight="5dp"
+                android:fontFamily="@font/happy"
+                />
+            <TextView
+                android:id="@+id/sp_tv2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="9sp"
+                android:textColor="@color/colorPrimaryDark"
+                android:text="▶▶▶"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="13dp"
+                android:layout_marginRight="5dp"
+                android:fontFamily="@font/happy" />
         </RelativeLayout>
 
 
