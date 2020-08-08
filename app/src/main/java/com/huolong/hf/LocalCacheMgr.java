@@ -377,6 +377,7 @@ public class LocalCacheMgr {
                     //下载完成
 
                 } catch (Exception e) {
+                    if(sum < real_sum) sum = real_sum;
                     success = false;
                     if(!(is_retry = retry(e.getMessage(),out,url,mime,destFileDir,destFileName,listener,5,sum)))
                     {
