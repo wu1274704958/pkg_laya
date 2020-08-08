@@ -34,11 +34,10 @@ public class ExternCall {
     public static final int WSendMessageToGame = 1;
     public static final int WSendMessageToGame_Nodel = 2;
 
-    @SuppressLint("HandlerLeak")
-    Handler my_handler = new Handler()
+    Handler my_handler = new Handler( new Handler.Callback()
     {
         @Override
-        public void handleMessage(@NonNull Message msg) {
+        public boolean handleMessage(@NonNull Message msg) {
             if(msg.what == 1)
             {
                 sendMessageToGame(callbacks,msg.arg1, (String) msg.obj);
@@ -46,8 +45,9 @@ public class ExternCall {
             {
                 sendMessageToGame_Nodel(callbacks,msg.arg1, (String) msg.obj);
             }
+            return true;
         }
-    };
+    });
 
     public static final int NetworkStatus = 11;
     public static final int BatteryStatus = 12;
