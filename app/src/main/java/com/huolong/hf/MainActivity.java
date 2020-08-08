@@ -27,7 +27,6 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -65,6 +64,24 @@ import one.chuanqi.online.test.R;
 
 public class MainActivity extends Activity {
 
+    private Handler handler = new Handler( new Handler.Callback(){
+        @Override
+        public boolean handleMessage(@NonNull Message msg) {
+            switch (msg.what)
+            {
+                case 0:
+                    if(sp_tv != null && msg.obj != null) sp_tv.setText(msg.obj.toString());
+                    break;
+                case 1:
+                    hide_splash();
+                    break;
+                default:
+
+                    break;
+            }
+            return true;
+        }
+    });
     AgentWeb mAgentWeb;
     private String url = "http://cqcdn.aolonggame.cn/cqres/web_online/index.php";
     //private String url = "http://47.102.115.132:8081/cqres/web_online/index.php";
@@ -81,6 +98,10 @@ public class MainActivity extends Activity {
     private AlertDialog exit_dialog;
     private TriangleGesture triangleGesture;
     private static final String DEBUG_IP_KEY = "DEBUG_IP_KEY";
+    private boolean is_hide_splash = true,need_hide_splash = false;
+    private TextView sp_tv;
+    private int splash_ani_d = 0;
+    private long loding_time = 0;
     FullScreenDialog.OnWVCb cb = new FullScreenDialog.OnWVCb() {
         @Override
         public void onDismiss() {
@@ -204,10 +225,14 @@ public class MainActivity extends Activity {
 
 
         if(has_splash) {
+            is_hide_splash = false;
             splash_view = create_splash();
             pb = splash_view.findViewById(R.id.pb1);
+            sp_tv = splash_view.findViewById(R.id.sp_tv2);
             Logw.e("pb == null = " + (pb == null));
             root.addView(splash_view,new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
+            launch_ani();
         }
 
         Log.e(TAG,"root "+ root.getChildCount() + (root.getChildAt(0) instanceof ImageView));
@@ -217,14 +242,56 @@ public class MainActivity extends Activity {
         //mAgentWeb.getJsInterfaceHolder().addJavaObject()
     }
 
+    private void launch_ani() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (!is_hide_splash)
+                {
+                    if(need_hide_splash && loding_time >= 2000) {
+                        handler.sendEmptyMessage(1);
+                        return;
+                    }
+
+                    int a = splash_ani_d % 5;
+                    StringBuilder sb = new StringBuilder();
+                    for(int i = 0;i < 5;++i)
+                    {
+                        if(a == i) sb.append('▷'); else sb.append('▶');
+                    }
+                    Message m = new Message();
+                    m.what = 0;
+                    m.obj = sb.toString();
+                    handler.sendMessage(m);
+
+                    ++splash_ani_d;
+
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    loding_time += 100;
+                }
+            }
+        }).start();
+    }
+
     private void hide_splash()
     {
+        if(loding_time < 2000)
+        {
+            need_hide_splash = true;
+            return;
+        }
         if(splash_view != null) {
             splash_view.startAnimation(scale);
             new Handler(getMainLooper()).postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     root.removeView(splash_view);
+                    is_hide_splash = true;
                     //root.invalidate();
                 }
             },scale.getDuration());
