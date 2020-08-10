@@ -35,7 +35,7 @@
         <meta-data
             android:name="notch.config"
             android:value="portrait|landscape"/>
-        <activity android:name="com.huolong.hf.MainActivity" android:screenOrientation="landscape"
+        <activity android:name="com.huolong.hf.MainActivity" android:screenOrientation="sensorLandscape"
             android:hardwareAccelerated="true"
             android:configChanges="orientation|screenSize"
             android:windowSoftInputMode="adjustPan">
