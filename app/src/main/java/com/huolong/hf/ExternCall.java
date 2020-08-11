@@ -25,6 +25,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import one.chuanqi.online.R;
+
 
 public class ExternCall {
     private static final String TAG = "ExternCall";
@@ -51,6 +53,7 @@ public class ExternCall {
 
     public static final int NetworkStatus = 11;
     public static final int BatteryStatus = 12;
+    public static final int ShowEditDialog = 13;
     public static final int CMD_QUICK_REG_NOTIF = 47;
     public static final int CMD_QUICK_ACTION = 48;
 
@@ -111,6 +114,8 @@ public class ExternCall {
         }
     }
 
+    private EditDialog editDialog;
+
     public void call(int cmd,int id,JSONObject body,boolean is_destroy) throws JSONException {
         MyCB cb = new MyCB(web);
         add(id,cb);
@@ -163,12 +168,26 @@ public class ExternCall {
                 Logw.e(func + "----------" + arr);
                 QuickSdk.gameCall(func,arr,cb);
                 break;
+            case ShowEditDialog:
+                if(editDialog == null)
+                    editDialog = new EditDialog(activity,my_handler, R.style.dialog_input);
+                Log.e(TAG,body.toString());
+                String res = "";
+
+                if(body.has("res"))
+                    res = body.getString("res");
+                Log.e(TAG,"res = " + res);
+                JSONObject oth = null;
+                if(body.has("oth"))
+                    oth = body.getJSONObject("oth");
+                editDialog.go(id,res,oth);
+                break;
         }
 
-        if(is_destroy)
-        {
-            rm(id);
-        }
+        //if(is_destroy)
+        //{
+        //    rm(id);
+        //}
     }
 
     private void add(int id,MyCB cb) {
