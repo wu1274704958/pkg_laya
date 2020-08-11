@@ -18,8 +18,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.huolong.hf.utils.InputMethodUtils;
 
@@ -38,6 +41,7 @@ public class EditDialog extends Dialog {
     Button btn;
     int cmdid = -1;
     String res;
+    private LinearLayout touch;
 
     static class Setting{
         public boolean multline = false;
@@ -102,8 +106,7 @@ public class EditDialog extends Dialog {
         getWindow().addFlags(
                 WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
         getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        getWindow().setSoftInputMode(
-                WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+        //getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
 
         //一定要在setContentView之后调用，否则无效
         getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
@@ -113,20 +116,15 @@ public class EditDialog extends Dialog {
         getWindow().getDecorView().setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
             @Override
             public void onSystemUiVisibilityChange(int i) {
-                int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
-                        //布局位于状态栏下方
-                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
-                        //全屏
-                        View.SYSTEM_UI_FLAG_FULLSCREEN |
-                        //隐藏导航栏
-                        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
-                if (Build.VERSION.SDK_INT >= 19) {
-                    uiOptions |= 0x00001000;
-                } else {
-                    uiOptions |= View.SYSTEM_UI_FLAG_LOW_PROFILE;
-                }
-                EditDialog.this.getWindow().getDecorView().setSystemUiVisibility(uiOptions);
+                setHideVirtualKey(getWindow());
+            }
+        });
+
+        touch = findViewById(getId("touch_v","id"));
+        touch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                send_and_dismiss();
             }
         });
 
@@ -144,6 +142,17 @@ public class EditDialog extends Dialog {
                 return false;
             }
         });
+        ed.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+                if(i == EditorInfo.IME_ACTION_DONE)
+                {
+                    send_and_dismiss();
+                    return true;
+                }
+                return false;
+            }
+        });
 
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -154,6 +163,24 @@ public class EditDialog extends Dialog {
 
 
 
+    }
+
+    public void setHideVirtualKey(Window window){
+        //保持布局状态
+        int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE|
+                //布局位于状态栏下方
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION|
+                //全屏
+                View.SYSTEM_UI_FLAG_FULLSCREEN|
+                //隐藏导航栏
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION|
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
+        if (Build.VERSION.SDK_INT>=19){
+            uiOptions |= 0x00001000;
+        }else{
+            uiOptions |= View.SYSTEM_UI_FLAG_LOW_PROFILE;
+        }
+        window.getDecorView().setSystemUiVisibility(uiOptions);
     }
 
     private void send_and_dismiss() {
@@ -194,6 +221,19 @@ public class EditDialog extends Dialog {
             apply_setting(setting);
             set_res(res);
             ed.requestFocus();
+            ed.setImeOptions(EditorInfo.IME_ACTION_DONE );
+
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    //Log.e(TAG,"InputMethodUtils.isShowing(context,ed) = " + InputMethodUtils.isShowing(context,ed) );
+                    //Log.e(TAG,"InputMethodUtils.isFullscreenMode(context) = " + InputMethodUtils.isFullscreenMode(context));
+                    //if( !InputMethodUtils.isShowing(context,ed) || InputMethodUtils.isFullscreenMode(context))
+                    {
+                        InputMethodUtils.show(context, ed);
+                    }
+                }
+            },310);
         }
     }
 
@@ -225,6 +265,7 @@ public class EditDialog extends Dialog {
 
     @Override
     public void dismiss() {
+        InputMethodUtils.showOrHide(context,ed);
         super.dismiss();
         cmdid = -1;
     }

@@ -1,16 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
-
+    <LinearLayout
+        android:id="@+id/touch_v"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:layout_weight="1"
+        />
 
     <LinearLayout
+        android:layout_alignBottom="@id/touch_v"
         android:layout_alignParentBottom="true"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="96dp"
         android:orientation="horizontal"
+        android:layout_weight="1"
         >
         <EditText
             android:id="@+id/et"
@@ -21,14 +29,17 @@
             android:textColor="@color/colorAccent"
             android:singleLine="true"
             android:paddingHorizontal="9dp"
+            android:paddingVertical="8dp"
+
             />
         <Button
             android:id="@+id/et_btn"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:text="确定"
+            android:gravity="center"
             android:layout_weight="1"
             android:background="@color/white"
             />
     </LinearLayout>
-</RelativeLayout>
+</LinearLayout>
