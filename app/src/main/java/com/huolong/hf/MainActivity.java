@@ -60,7 +60,6 @@ import org.json.JSONObject;
 
 import java.lang.reflect.Method;
 
-import one.chuanqi.online.test.R;
 
 
 public class MainActivity extends Activity {
