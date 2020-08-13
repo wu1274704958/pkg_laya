@@ -239,7 +239,7 @@ public class EditDialog extends Dialog {
 
     private void apply_setting(Setting setting) {
 
-
+        if(ed == null) return;
         ed.setSingleLine(!setting.multline);
         int ty = InputType.TYPE_CLASS_TEXT;
         if(setting.is_number)

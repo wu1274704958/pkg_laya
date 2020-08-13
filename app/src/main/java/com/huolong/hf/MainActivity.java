@@ -94,6 +94,7 @@ public class MainActivity extends Activity {
     private TextView sp_tv;
     private int splash_ani_d = 0;
     private long loding_time = 0;
+    private boolean software = true;
     FullScreenDialog.OnWVCb cb = new FullScreenDialog.OnWVCb() {
         @Override
         public void onDismiss() {
@@ -145,8 +146,8 @@ public class MainActivity extends Activity {
         //设置一个布局
 
         setContentView(  R.layout.activity_framelayout);
-        getWindow().addFlags(
-                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
+        if(!software)
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
         getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         //一定要在setContentView之后调用，否则无效
         getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
@@ -178,7 +179,7 @@ public class MainActivity extends Activity {
                 .go(url);
         mAgentWeb.getAgentWebSettings().getWebSettings().setUserAgentString("Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1");
         mAgentWeb.getAgentWebSettings().getWebSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
-        mAgentWeb.getAgentWebSettings().getWebSettings().setRenderPriority(WebSettings.RenderPriority.HIGH);
+        if(!software)mAgentWeb.getAgentWebSettings().getWebSettings().setRenderPriority(WebSettings.RenderPriority.HIGH);
 
 
         if(has_splash) {
@@ -291,8 +292,10 @@ public class MainActivity extends Activity {
                     e.printStackTrace();
                 }
             }
-            view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-            //view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+            if(!software)
+                view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+            else
+                view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
             view.getSettings().setAppCacheEnabled(true);
             return true;
         }
