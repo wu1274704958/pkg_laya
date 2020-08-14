@@ -320,7 +320,7 @@ public class MainActivity extends Activity {
             }else
             if(consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.ERROR)
             {
-                Log.e("WVCM",consoleMessage.message());
+                Log.e("WVCM",consoleMessage.message() + " " + consoleMessage.sourceId() + "   " +  consoleMessage.lineNumber());
             }
             return true;
         }
