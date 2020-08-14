@@ -309,19 +309,19 @@ public class MainActivity extends Activity {
         public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
             if(consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.TIP)
             {
-                Log.v("WVCM",consoleMessage.message());
+                Log.v("WVCM",consoleMessage.message()+ " " + consoleMessage.sourceId() + "   " +  consoleMessage.lineNumber());
             }else
             if(consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.DEBUG)
             {
-                Log.d("WVCM",consoleMessage.message());
+                Log.d("WVCM",consoleMessage.message()+ " " + consoleMessage.sourceId() + "   " +  consoleMessage.lineNumber());
             }else
             if(consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.LOG)
             {
-                Log.i("WVCM",consoleMessage.message());
+                Log.i("WVCM",consoleMessage.message()+ " " + consoleMessage.sourceId() + "   " +  consoleMessage.lineNumber());
             }else
             if(consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.WARNING)
             {
-                Log.w("WVCM",consoleMessage.message());
+                Log.w("WVCM",consoleMessage.message()+ " " + consoleMessage.sourceId() + "   " +  consoleMessage.lineNumber());
             }else
             if(consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.ERROR)
             {
