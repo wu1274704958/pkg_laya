@@ -56,8 +56,8 @@ import org.json.JSONObject;
 
 import java.lang.reflect.Method;
 
-import one.chuanqi.online.BuildConfig;
-import one.chuanqi.online.R;
+import one.huolong.online.BuildConfig;
+import one.huolong.online.R;
 
 import static android.webkit.WebSettings.LOAD_CACHE_ELSE_NETWORK;
 
