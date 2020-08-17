@@ -1,7 +1,6 @@
 package com.huolong.hf;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.widget.ContentLoadingProgressBar;
 
@@ -47,15 +46,27 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.huolong.hf.utils.Utils;
 import com.just.agentweb.AgentWeb;
 import com.just.agentweb.WebChromeClient;
 import com.plug.wv.FullScreenDialog;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okio.BufferedSink;
 import one.huolong.online.BuildConfig;
 import one.huolong.online.R;
 
@@ -73,6 +84,9 @@ public class MainActivity extends Activity {
                     break;
                 case 1:
                     hide_splash();
+                    break;
+                case 2:
+                    pop_error_dialog("网络连接超时，请您检查网络状态!");
                     break;
                 default:
 
@@ -100,6 +114,7 @@ public class MainActivity extends Activity {
     private int splash_ani_d = 0;
     private long loding_time = 0;
     private boolean software = true;
+    private TextView tv_ver;
     FullScreenDialog.OnWVCb cb = new FullScreenDialog.OnWVCb() {
         @Override
         public void onDismiss() {
@@ -132,6 +147,8 @@ public class MainActivity extends Activity {
             }
         }
     };
+    private AlertDialog err_dialog;
+    private TextView err_dialog_tv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -192,6 +209,8 @@ public class MainActivity extends Activity {
             splash_view = create_splash();
             pb = splash_view.findViewById(R.id.pb1);
             sp_tv = splash_view.findViewById(R.id.sp_tv2);
+            tv_ver = splash_view.findViewById(R.id.tv_ver);
+            tv_ver.setText("v"+Utils.getAppVersionName(this));
             Logw.e("pb == null = " + (pb == null));
             root.addView(splash_view,new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
@@ -214,6 +233,10 @@ public class MainActivity extends Activity {
                     if(need_hide_splash && loding_time >= 2000) {
                         handler.sendEmptyMessage(1);
                         return;
+                    }
+                    if(loding_time >= 20000)
+                    {
+                        handler.sendEmptyMessage(2);
                     }
 
                     int a = splash_ani_d % 5;
@@ -325,7 +348,14 @@ public class MainActivity extends Activity {
             }else
             if(consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.ERROR)
             {
-                Log.e("WVCM",consoleMessage.message() + " " + consoleMessage.sourceId() + "   " +  consoleMessage.lineNumber());
+                String s = consoleMessage.message() + " " + consoleMessage.sourceId() +  " " +  consoleMessage.lineNumber();
+                upload_err_msg(s);
+
+                if(!is_hide_splash)
+                {
+                    pop_error_dialog("游戏加载错误!");
+                }
+                Log.e("WVCM",s);
             }
             return true;
         }
@@ -336,6 +366,85 @@ public class MainActivity extends Activity {
             return false;
         }
     };
+
+    private void upload_err_msg(String s) {
+        StringBuffer model = new StringBuffer( Build.MODEL);
+        MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+
+        model.append(" ");
+        model.append(s);
+
+        JSONObject o = new JSONObject();
+        try{
+            o.put("account","Android");
+            o.put("appid","31726");
+            o.put("ad",1025);
+            o.put("type",3);
+            o.put("text",model.toString());
+            o.put("ip","127.0.0.1");
+
+        }catch (Exception e)
+        {
+            Log.e("upload_err_msg",e.getMessage());
+        }
+        OkHttpClient okHttpClient = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url("http://cquc.5imengling.com/feedback")
+                .post(RequestBody.create(JSON,o.toString()))
+                .build();
+        okHttpClient.newCall(request).enqueue(new Callback(){
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if(response.code() == 200)
+                {
+                    Log.e("upload_err_msg","upload success");
+                }else {
+                    Log.e("upload_err_msg","upload failed code = " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Log.e("upload_err_msg","upload failed msg = " + e.getMessage());
+            }
+        });
+
+    }
+
+    private void pop_error_dialog(String s) {
+
+        if(err_dialog == null) {
+
+            err_dialog_tv = new TextView(this);
+            err_dialog_tv.setText(s);
+            err_dialog_tv.setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+            err_dialog_tv.setTextSize(16.f);
+            err_dialog_tv.setPadding(39, 5, 5, 5);
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.dialog);
+            err_dialog = builder.setCancelable(true)
+                    .setPositiveButton("重试", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            startActivity(new Intent(MainActivity.this, MainActivity.class));
+                        }
+                    })
+                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                        }
+                    })
+                    .setView(err_dialog_tv)
+                    //.setMessage("确定要退出游戏吗?")
+                    .setTitle("提示")
+                    .create();
+        }else{
+            err_dialog_tv.setText(s);
+        }
+        err_dialog.show();
+    }
 
     private com.just.agentweb.WebViewClient mWebViewClient = new com.just.agentweb.WebViewClient()
     {
