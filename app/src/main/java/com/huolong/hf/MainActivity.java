@@ -6,7 +6,9 @@ import androidx.core.widget.ContentLoadingProgressBar;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -377,7 +379,7 @@ public class MainActivity extends Activity {
         JSONObject o = new JSONObject();
         try{
             o.put("account","Android");
-            o.put("appid","31726");
+            o.put("appid","1000000010");
             o.put("ad",1025);
             o.put("type",3);
             o.put("text",model.toString());
@@ -389,7 +391,7 @@ public class MainActivity extends Activity {
         }
         OkHttpClient okHttpClient = new OkHttpClient();
         Request request = new Request.Builder()
-                .url("http://cquc.5imengling.com/feedback")
+                .url("http://cquc.5imengling.com/api/feedback")
                 .post(RequestBody.create(JSON,o.toString()))
                 .build();
         okHttpClient.newCall(request).enqueue(new Callback(){
@@ -427,7 +429,7 @@ public class MainActivity extends Activity {
                     .setPositiveButton("重试", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            startActivity(new Intent(MainActivity.this, MainActivity.class));
+                            restart(MainActivity.this,MainActivity.class);
                         }
                     })
                     .setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -491,6 +493,7 @@ public class MainActivity extends Activity {
         super.onResume();
         mAgentWeb.getWebLifeCycle().onResume();
         QuickSdk.onResume(this);
+        externCall.onResume();
     }
 
     @Override
@@ -498,6 +501,7 @@ public class MainActivity extends Activity {
         super.onPause();
         mAgentWeb.getWebLifeCycle().onPause();
         QuickSdk.onPause(this);
+        externCall.onPause();
     }
 
     @Override
@@ -600,6 +604,14 @@ public class MainActivity extends Activity {
                     .create();
         }
         exit_dialog.show();
+    }
+
+    void restart(Context context,Class clzss)
+    {
+        final Intent intent = getPackageManager().getLaunchIntentForPackage(getPackageName());
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        finish();
+        startActivity(intent);
     }
 
 

@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -16,6 +17,7 @@ import androidx.annotation.NonNull;
 
 import com.huolong.hf.utils.BatteryReceiver;
 import com.huolong.hf.utils.NetMonitor;
+import com.huolong.hf.utils.Utils;
 import com.just.agentweb.AgentWeb;
 import com.plug.oaid.Oaid;
 import com.plug.reg.Reg;
@@ -56,6 +58,8 @@ public class ExternCall {
     public static final int ShowEditDialog = 13;
     public static final int CMD_QUICK_REG_NOTIF = 47;
     public static final int CMD_QUICK_ACTION = 48;
+    public static final int RegResume = 14;
+    public static final int PkgInfo = 15;
 
     public ExternCall(AgentWeb web,Activity activity) {
         this.web = web;
@@ -182,6 +186,18 @@ public class ExternCall {
                     oth = body.getJSONObject("oth");
                 editDialog.go(id,res,oth);
                 break;
+            case RegResume:
+                reg_resume_cmdid = id;
+                break;
+            case PkgInfo: {
+
+                JSONObject o = new JSONObject();
+                o.put("ver", Utils.getAppVersionName(activity));
+                o.put("model", Build.MODEL);
+                o.put("channel","AL");
+                sendMessageToGame(callbacks,id,o.toString());
+                break;
+            }
         }
 
         //if(is_destroy)
@@ -197,5 +213,32 @@ public class ExternCall {
     private void rm(int id) {
         if(callbacks.get(id) != null)
             callbacks.remove(id);
+    }
+
+    private int reg_resume_cmdid = -1;
+
+    public void onResume()
+    {
+        if(reg_resume_cmdid > -1) {
+            JSONObject o = new JSONObject();
+            try {
+                o.put("act","onResume");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            sendMessageToGame_Nodel(callbacks, reg_resume_cmdid, o.toString());
+        }
+    }
+    public void onPause()
+    {
+        if(reg_resume_cmdid > -1) {
+            JSONObject o = new JSONObject();
+            try {
+                o.put("act","onPause");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            sendMessageToGame_Nodel(callbacks, reg_resume_cmdid, o.toString());
+        }
     }
 }
