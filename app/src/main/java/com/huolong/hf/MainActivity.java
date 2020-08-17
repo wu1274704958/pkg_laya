@@ -1,11 +1,13 @@
 package com.huolong.hf;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.widget.ContentLoadingProgressBar;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
@@ -21,10 +23,12 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Debug;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.PersistableBundle;
+import android.os.Process;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.KeyEvent;
@@ -90,6 +94,11 @@ public class MainActivity extends Activity {
                 case 2:
                     pop_error_dialog("网络连接超时，请您检查网络状态!");
                     break;
+                case 4:
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        update_memory_info();
+                    }
+                    break;
                 default:
 
                     break;
@@ -104,6 +113,7 @@ public class MainActivity extends Activity {
     FrameLayout root;
     public static String TAG = "WV";
     private Boolean has_splash = true;
+    private boolean has_memory_info = false;
     private boolean auto_hide_splash = false;
     ExternCall externCall;
     private View splash_view;
@@ -115,7 +125,7 @@ public class MainActivity extends Activity {
     private TextView sp_tv;
     private int splash_ani_d = 0;
     private long loding_time = 0;
-    private boolean software = true;
+    private boolean software = false;
     private TextView tv_ver;
     FullScreenDialog.OnWVCb cb = new FullScreenDialog.OnWVCb() {
         @Override
@@ -219,6 +229,13 @@ public class MainActivity extends Activity {
             launch_ani();
         }
 
+        if(has_memory_info) {
+            mem_info = (LinearLayout) create_mem_info();
+            root.addView(mem_info,new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+            launch_update_mem();
+        }
+
         Log.e(TAG,"root "+ root.getChildCount() + (root.getChildAt(0) instanceof ImageView));
 
         externCall = new ExternCall(mAgentWeb,this);
@@ -297,7 +314,8 @@ public class MainActivity extends Activity {
                 view.setBackgroundColor(Color.WHITE);
                 mAgentWeb.getIndicatorController().finish();
                 if(splash_view != null && auto_hide_splash) {
-                    root.removeView(splash_view);
+                   // root.removeView(splash_view);
+                    hide_splash();
                 } //root.invalidate();
 
             }else {
@@ -378,13 +396,10 @@ public class MainActivity extends Activity {
 
         JSONObject o = new JSONObject();
         try{
-            o.put("account","Android");
+            o.put("token","zHMDVSuveFtK.EngLjZvWrpejEhXboRptbnIdCUY1pfLye7VDbVNvxUWXdceT.IXfkSLOfkp4Nl10J.fAii.sJJcZaxS6YUR0-RniOyx094!");
             o.put("appid","1000000010");
-            o.put("ad",1025);
             o.put("type",3);
             o.put("text",model.toString());
-            o.put("ip","127.0.0.1");
-
         }catch (Exception e)
         {
             Log.e("upload_err_msg",e.getMessage());
@@ -400,7 +415,13 @@ public class MainActivity extends Activity {
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 if(response.code() == 200)
                 {
-                    Log.e("upload_err_msg","upload success");
+                    try {
+                        String res = response.body().string();
+                        Log.e("upload_err_msg", "upload success " + res);
+                    }catch (Exception e){}
+
+                    response.close();
+
                 }else {
                     Log.e("upload_err_msg","upload failed code = " + response.code());
                 }
@@ -612,6 +633,116 @@ public class MainActivity extends Activity {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         finish();
         startActivity(intent);
+    }
+
+    private LinearLayout mem_info;
+    private TextView[] mem_tvs;
+
+    View create_mem_info()
+    {
+        LinearLayout view = (LinearLayout) LinearLayout.inflate(this,R.layout.memory, null);
+
+        return view;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    void update_memory_info()
+    {
+
+        if(mem_info != null) {
+
+            if(mem_tvs == null)
+            {
+                mem_tvs = new TextView[3];
+                for(int i = 0;i < 3;++i)
+                {
+                    mem_tvs[i] = mem_info.findViewById( getResources().getIdentifier("mem_t"+(i + 1),"id",getPackageName()));
+                }
+            }
+
+            ActivityManager mActivityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+
+            ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
+
+            mActivityManager.getMemoryInfo(memoryInfo);
+
+            mem_tvs[1].setText(String.format("%s", (double) memoryInfo.availMem / 1000000));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                mem_tvs[2].setText(String.format("%s", (double) memoryInfo.totalMem / 1000000));
+            }
+            String src = mem_tvs[2].getText().toString();
+            mem_tvs[2].setText(String.format("%s free : %s max : %s",src,
+                    Runtime.getRuntime().freeMemory(),
+                    Runtime.getRuntime().maxMemory()
+            ));
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    void update_memory2()
+    {
+
+        if(mem_info != null) {
+
+            if (mem_tvs == null) {
+                mem_tvs = new TextView[3];
+                for (int i = 0; i < 3; ++i) {
+                    mem_tvs[i] = mem_info.findViewById(getResources().getIdentifier("mem_t" + (i + 1), "id", getPackageName()));
+                }
+            }
+            ActivityManager mActivityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            Debug.MemoryInfo[] memoryInfos = mActivityManager
+                    .getProcessMemoryInfo(new int[]{Process.myPid()});
+
+            String java_mem = memoryInfos[0].getMemoryStat("summary.java-heap");
+
+            String native_mem = memoryInfos[0].getMemoryStat("summary.native-heap");
+
+            String code_mem = memoryInfos[0].getMemoryStat("summary.code");
+
+            String stack_mem = memoryInfos[0].getMemoryStat("summary.stack");
+
+            String graphics_mem = memoryInfos[0].getMemoryStat("summary.graphics");
+
+            String private_other_mem = memoryInfos[0].getMemoryStat("summary.private-other");
+
+            String system_mem = memoryInfos[0].getMemoryStat("summary.system");
+
+            String total_pss_mem = memoryInfos[0].getMemoryStat("summary.total-pss");
+
+            String total_swap_mem = memoryInfos[0].getMemoryStat("summary.total-swap");
+
+            mem_tvs[0].setText(String.format("" +
+                            "java_mem:%s\nnative_mem:%s\ncode_mem:%s\nstack_mem:%s\ngraphics_mem:%s\nprivate_other_mem:%s\nsystem_mem:%s\ntotal_pss_mem:%s\ntotal_swap_mem:%s",
+                    Float.parseFloat(java_mem) / 1024.f,
+                    Float.parseFloat(native_mem) / 1024.f,
+                    Float.parseFloat(code_mem) / 1024.f,
+                    Float.parseFloat(stack_mem) / 1024.f,
+                    Float.parseFloat(graphics_mem) / 1024.f,
+                    Float.parseFloat(private_other_mem) / 1024.f,
+                    Float.parseFloat(system_mem) / 1024.f,
+                    Float.parseFloat(total_pss_mem) / 1024.f,
+                    Float.parseFloat(total_swap_mem) / 1024.f)
+            );
+        }
+    }
+
+    void launch_update_mem()
+    {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true)
+                {
+                    handler.sendEmptyMessage(4);
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
     }
 
 
