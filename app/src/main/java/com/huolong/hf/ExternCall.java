@@ -18,7 +18,7 @@ import androidx.annotation.NonNull;
 import com.huolong.hf.utils.BatteryReceiver;
 import com.huolong.hf.utils.NetMonitor;
 import com.huolong.hf.utils.Utils;
-import com.just.agentweb.AgentWeb;
+import com.just.agentwebX5.AgentWebX5;
 import com.plug.oaid.Oaid;
 import com.plug.reg.Reg;
 import com.plug.wv.WebView;
@@ -32,7 +32,7 @@ import one.huolong.online.R;
 
 public class ExternCall {
     private static final String TAG = "ExternCall";
-    AgentWeb web;
+    AgentWebX5 web;
     SparseArray<ValueCallback<JSONObject>> callbacks;
     Activity activity;
     public static final int WSendMessageToGame = 1;
@@ -61,16 +61,16 @@ public class ExternCall {
     public static final int RegResume = 14;
     public static final int PkgInfo = 15;
 
-    public ExternCall(AgentWeb web,Activity activity) {
+    public ExternCall(AgentWebX5 web,Activity activity) {
         this.web = web;
         this.activity = activity;
         this.callbacks = new SparseArray<ValueCallback<JSONObject>>();
     }
 
     static class MyCB implements ValueCallback<JSONObject> {
-        AgentWeb web;
+        AgentWebX5 web;
 
-        public MyCB(AgentWeb web) {
+        public MyCB(AgentWebX5 web) {
             this.web = web;
         }
 
@@ -78,7 +78,7 @@ public class ExternCall {
         public void onReceiveValue(JSONObject jsonObject) {
             try {
                 Log.e(TAG,"onReceiveValue" + jsonObject.toString());
-                web.getJsAccessEntrace().quickCallJs("extern_back", jsonObject.toString());
+                web.getJsEntraceAccess().quickCallJs("extern_back", jsonObject.toString());
             } catch (Exception e) {
                 Log.e(TAG,e.getMessage());
             }

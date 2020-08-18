@@ -39,13 +39,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.webkit.ConsoleMessage;
-import android.webkit.JsResult;
 
-import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -53,9 +47,16 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.huolong.hf.utils.Utils;
-import com.just.agentweb.AgentWeb;
-import com.just.agentweb.WebChromeClient;
+import com.just.agentwebX5.AgentWebX5;
 import com.plug.wv.FullScreenDialog;
+import com.tencent.smtt.export.external.interfaces.ConsoleMessage;
+import com.tencent.smtt.export.external.interfaces.JsResult;
+import com.tencent.smtt.export.external.interfaces.WebResourceRequest;
+import com.tencent.smtt.export.external.interfaces.WebResourceResponse;
+import com.tencent.smtt.sdk.QbSdk;
+import com.tencent.smtt.sdk.WebChromeClient;
+import com.tencent.smtt.sdk.WebSettings;
+import com.tencent.smtt.sdk.WebView;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -107,13 +108,14 @@ public class MainActivity extends Activity {
             return true;
         }
     });
-    AgentWeb mAgentWeb;
+    AgentWebX5 mAgentWeb;
+    //private String url = "http://debugtbs.qq.com";
     private String url = "http://cqcdn.aolonggame.cn/cqres/web_online/index.php";
     //private String url = "http://47.102.115.132:8081/cqres/web_online/index.php";
     //private String url = "http://10.10.6.67:8900/bin/index.html";
     FrameLayout root;
     public static String TAG = "WV";
-    private Boolean has_splash = true;
+    private Boolean has_splash = false;
     private boolean has_memory_info = false;
     private boolean auto_hide_splash = false;
     ExternCall externCall;
@@ -205,16 +207,27 @@ public class MainActivity extends Activity {
 
         QuickSdk.init(this);
 
-        mAgentWeb = AgentWeb.with(this)//传入Activity
+
+        go();
+
+        Log.e("X5Init","canLoadX5 " +  QbSdk.canLoadX5(this));
+
+        //mAgentWeb.getJsInterfaceHolder().addJavaObject()
+    }
+
+    private void go()
+    {
+        mAgentWeb = AgentWebX5.with(this)//传入Activity
                 .setAgentWebParent(root, root.getLayoutParams())//传入AgentWeb 的父控件 ，如果父控件为 RelativeLayout ， 那么第二参数需要传入 RelativeLayout.LayoutParams
-                .closeIndicator()
+                .useDefaultIndicator()
+                .defaultProgressBarColor()
                 .setWebChromeClient(mWebChromeClient)
                 .setWebViewClient(mWebViewClient)
                 .createAgentWeb()//
                 .go(url);
-        mAgentWeb.getAgentWebSettings().getWebSettings().setUserAgentString("Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1");
-        mAgentWeb.getAgentWebSettings().getWebSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
-        if(!software)mAgentWeb.getAgentWebSettings().getWebSettings().setRenderPriority(WebSettings.RenderPriority.HIGH);
+        mAgentWeb.getWebSettings().getWebSettings().setUserAgentString("Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1");
+        mAgentWeb.getWebSettings().getWebSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
+        if(!software)mAgentWeb.getWebSettings().getWebSettings().setRenderPriority(com.tencent.smtt.sdk.WebSettings.RenderPriority.HIGH);
 
 
         if(has_splash) {
@@ -239,9 +252,9 @@ public class MainActivity extends Activity {
 
         Log.e(TAG,"root "+ root.getChildCount() + (root.getChildAt(0) instanceof ImageView));
 
-        externCall = new ExternCall(mAgentWeb,this);
+
         mAgentWeb.getJsInterfaceHolder().addJavaObject("native_call", new JsCallAndroidInterface(mAgentWeb, this,cb));
-        //mAgentWeb.getJsInterfaceHolder().addJavaObject()
+        externCall = new ExternCall(mAgentWeb,this);
     }
 
     private void launch_ani() {
@@ -306,14 +319,14 @@ public class MainActivity extends Activity {
 
     }
 
-    private WebChromeClient mWebChromeClient=new WebChromeClient(){
+    private com.tencent.smtt.sdk.WebChromeClient mWebChromeClient=new com.tencent.smtt.sdk.WebChromeClient(){
         @Override
-        public void onProgressChanged(android.webkit.WebView view, int newProgress) {
+        public void onProgressChanged(WebView view, int newProgress) {
 
             cb.onProcess(newProgress);
             if (newProgress==100){
                 view.setBackgroundColor(Color.WHITE);
-                mAgentWeb.getIndicatorController().finish();
+                //mAgentWeb.getIndicatorController().offerIndicator();
                 if(splash_view != null && auto_hide_splash) {
                    // root.removeView(splash_view);
                     hide_splash();
@@ -326,7 +339,7 @@ public class MainActivity extends Activity {
         }
 
         @Override
-        public boolean onCreateWindow(android.webkit.WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
+        public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN){
                 view.getSettings().setAllowUniversalAccessFromFileURLs(true);
                 view.getSettings().setAllowFileAccessFromFileURLs(true);
@@ -468,7 +481,7 @@ public class MainActivity extends Activity {
         err_dialog.show();
     }
 
-    private com.just.agentweb.WebViewClient mWebViewClient = new com.just.agentweb.WebViewClient()
+    private com.tencent.smtt.sdk.WebViewClient mWebViewClient = new com.tencent.smtt.sdk.WebViewClient()
     {
         @Override
         public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
@@ -511,7 +524,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        mAgentWeb.getWebLifeCycle().onResume();
+        if(mAgentWeb != null)
+            mAgentWeb.getWebLifeCycle().onResume();
         QuickSdk.onResume(this);
         externCall.onResume();
     }
@@ -519,7 +533,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        mAgentWeb.getWebLifeCycle().onPause();
+        if(mAgentWeb != null)
+            mAgentWeb.getWebLifeCycle().onPause();
         QuickSdk.onPause(this);
         externCall.onPause();
     }
@@ -527,7 +542,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mAgentWeb.getWebLifeCycle().onDestroy();
+        if(mAgentWeb != null)
+            mAgentWeb.getWebLifeCycle().onDestroy();
         QuickSdk.onDestroy(this);
     }
 

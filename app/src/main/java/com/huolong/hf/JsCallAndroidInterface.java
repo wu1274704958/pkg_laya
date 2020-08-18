@@ -6,7 +6,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
 
-import com.just.agentweb.AgentWeb;
+import com.just.agentwebX5.AgentWebX5;
 import com.plug.wv.FullScreenDialog;
 
 /**
@@ -15,12 +15,12 @@ import com.plug.wv.FullScreenDialog;
  **/
 public class JsCallAndroidInterface {
     private Handler deliver = new Handler(Looper.getMainLooper());
-    private AgentWeb agent;
+    private AgentWebX5 agent;
     private Context context;
     FullScreenDialog.OnWVCb cb;
 
 
-    public JsCallAndroidInterface(AgentWeb agent, Context context, FullScreenDialog.OnWVCb cb) {
+    public JsCallAndroidInterface(AgentWebX5 agent, Context context, FullScreenDialog.OnWVCb cb) {
         this.agent = agent;
         this.context = context;
         this.cb = cb;
