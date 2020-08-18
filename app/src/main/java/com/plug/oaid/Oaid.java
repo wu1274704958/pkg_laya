@@ -66,7 +66,7 @@ public class Oaid {
                             } catch (Exception e) {
                                 Log.e(TAG, "err = " + e.getMessage());
                             }
-                            sendMessageToGame_Nodel(callbacks, cmdid, obj.toString());
+                            sendMessageToGame(callbacks, cmdid, obj.toString());
                         }
                     });
             mDevicesIDsHelper.getOAID(activity);

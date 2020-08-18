@@ -75,6 +75,8 @@ public class LocalCacheMgr {
     public static final Integer MAX_RETRY = 10;
     private Handler handler = new Handler(Looper.getMainLooper());
 
+    private boolean use_web_download = false;
+
     private boolean not_cache_js = false;
     public LocalCacheMgr(String url,Activity activity) {
         this.activity = activity;
@@ -104,6 +106,8 @@ public class LocalCacheMgr {
                 return new WebResourceResponse(mime,"UTF-8",is);
             }
         }
+        if(use_web_download)
+            return null;
         try {
             if(
                     url.endsWith(".png") || ( !not_cache_js && url.endsWith(".js")) || url.endsWith(".mp3") ||

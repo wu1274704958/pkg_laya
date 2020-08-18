@@ -92,6 +92,7 @@ public class MainActivity extends Activity {
                     hide_splash();
                     break;
                 case 2:
+                    is_pop_longtime = true;
                     pop_error_dialog("网络连接超时，请您检查网络状态!");
                     break;
                 case 4:
@@ -121,7 +122,7 @@ public class MainActivity extends Activity {
     private ContentLoadingProgressBar pb;
     private Animation scale;
     private AlertDialog exit_dialog;
-    private boolean is_hide_splash = true,need_hide_splash = false;
+    private boolean is_hide_splash = true,need_hide_splash = false,is_pop_longtime = false;
     private TextView sp_tv;
     private int splash_ani_d = 0;
     private long loding_time = 0;
@@ -253,7 +254,7 @@ public class MainActivity extends Activity {
                         handler.sendEmptyMessage(1);
                         return;
                     }
-                    if(loding_time >= 20000)
+                    if(!is_pop_longtime && loding_time >= 20000)
                     {
                         handler.sendEmptyMessage(2);
                     }
@@ -419,12 +420,10 @@ public class MainActivity extends Activity {
                         String res = response.body().string();
                         Log.e("upload_err_msg", "upload success " + res);
                     }catch (Exception e){}
-
-                    response.close();
-
                 }else {
                     Log.e("upload_err_msg","upload failed code = " + response.code());
                 }
+                response.close();
             }
 
             @Override
@@ -665,7 +664,7 @@ public class MainActivity extends Activity {
             ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
 
             mActivityManager.getMemoryInfo(memoryInfo);
-
+            update_memory2();
             mem_tvs[1].setText(String.format("%s", (double) memoryInfo.availMem / 1000000));
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 mem_tvs[2].setText(String.format("%s", (double) memoryInfo.totalMem / 1000000));
