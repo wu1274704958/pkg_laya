@@ -115,7 +115,7 @@ public class MainActivity extends Activity {
     //private String url = "http://10.10.6.67:8900/bin/index.html";
     FrameLayout root;
     public static String TAG = "WV";
-    private Boolean has_splash = false;
+    private Boolean has_splash = true;
     private boolean has_memory_info = false;
     private boolean auto_hide_splash = false;
     ExternCall externCall;
@@ -236,7 +236,7 @@ public class MainActivity extends Activity {
             pb = splash_view.findViewById(R.id.pb1);
             sp_tv = splash_view.findViewById(R.id.sp_tv2);
             tv_ver = splash_view.findViewById(R.id.tv_ver);
-            tv_ver.setText("v"+Utils.getAppVersionName(this));
+            tv_ver.setText("v"+Utils.getAppVersionName(this) + "_x5_"+ (QbSdk.canLoadX5(this) ? "1":"0"));
             Logw.e("pb == null = " + (pb == null));
             root.addView(splash_view,new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
@@ -248,6 +248,11 @@ public class MainActivity extends Activity {
             root.addView(mem_info,new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
             launch_update_mem();
+        }
+
+        if( !QbSdk.canLoadX5(this))
+        {
+            pop_install_x5_dialog();
         }
 
         Log.e(TAG,"root "+ root.getChildCount() + (root.getChildAt(0) instanceof ImageView));
@@ -758,6 +763,34 @@ public class MainActivity extends Activity {
                 }
             }
         }).start();
+    }
+
+    private void pop_install_x5_dialog() {
+         TextView err_dialog_tv = new TextView(this);
+         err_dialog_tv.setText("检测到没有安装腾讯X5内核,是否前往安装?");
+         err_dialog_tv.setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+         err_dialog_tv.setTextSize(16.f);
+         err_dialog_tv.setPadding(39, 5, 5, 5);
+         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.dialog);
+         AlertDialog err_dialog = builder.setCancelable(true)
+                    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            mAgentWeb.getLoader().loadUrl("http://debugtbs.qq.com");
+                        }
+                    })
+                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                        }
+                    })
+                    .setView(err_dialog_tv)
+                    //.setMessage("确定要退出游戏吗?")
+                    .setTitle("提示")
+                    .create();
+
+        err_dialog.show();
     }
 
 
