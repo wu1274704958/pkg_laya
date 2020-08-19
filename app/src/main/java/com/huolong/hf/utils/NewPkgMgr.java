@@ -86,6 +86,12 @@ public class NewPkgMgr {
     }
 
     Context context;
+    public static final int ST_FREE = 0;
+    public static final int ST_LoadConfig = 1;
+    public static final int ST_Download = 2;
+    public static final int ST_Install = 3;
+    private int state = ST_FREE;
+
     private static final int Pid = 1300;
     public NewPkgMgr(Context context)
     {
@@ -98,6 +104,7 @@ public class NewPkgMgr {
 
     public void load_config()
     {
+        state = ST_LoadConfig;
         Log.e(TAG,"load_config");
         MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
@@ -130,6 +137,7 @@ public class NewPkgMgr {
                         onload_success(info);
                     }catch (Exception e){}
                 }else {
+                    state = ST_FREE;
                     Log.e(TAG,"ver failed code = " + response.code());
                 }
                 response.close();
@@ -138,6 +146,7 @@ public class NewPkgMgr {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 Log.e(TAG,"ver failed msg = " + e.getMessage());
+                state = ST_FREE;
             }
         });
         Log.e(TAG,"load_config e");
@@ -201,7 +210,7 @@ public class NewPkgMgr {
     }
     private AlertDialog temp_dialog;
     private void download(final boolean is_force, final String url, final String ver) {
-
+        state = ST_Download;
         Log.e(TAG,"download " + url);
         final LocalCacheMgr.OnDownloadListener cb = new LocalCacheMgr.OnDownloadListener() {
             @Override
@@ -247,8 +256,16 @@ public class NewPkgMgr {
                             download(is_force,url,ver);
                         }
                     });
-                }
+                }else
+                    state = ST_FREE;
                 Log.e(TAG,"download failed " + e.getMessage() + " " + name);
+            }
+        };
+        final OnDownloadProgressListener downloadProgressListener = new OnDownloadProgressListener() {
+            @Override
+            public void onProgress(long curr, long max, int progress, String name) {
+                if(is_force && progress_tv != null)
+                    progress_tv.setText(String.format("%sMB/%sMB", curr / 1048576,max / 1048576));
             }
         };
         Log.e(TAG,"is_force " + is_force);
@@ -262,12 +279,12 @@ public class NewPkgMgr {
                         public void onClick(DialogInterface dialogInterface, int i) {
                             dialogInterface.dismiss();
                             temp_dialog = pop_progress_dialog();
-                            download(url, root.getAbsolutePath(), apk_name,cb);
+                            download(url, root.getAbsolutePath(), apk_name,cb,downloadProgressListener);
                         }
                     }, "取消", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-
+                            android.os.Process.killProcess(android.os.Process.myPid());
                         }
                     });
                 }
@@ -280,7 +297,7 @@ public class NewPkgMgr {
                     pop_dialog("新版本可用,是否后台下载?", false, "下载", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            download(url, root.getAbsolutePath(), apk_name,cb);
+                            download(url, root.getAbsolutePath(), apk_name,cb,null);
                             dialogInterface.dismiss();
                         }
                     }, "取消", new DialogInterface.OnClickListener() {
@@ -346,6 +363,7 @@ public class NewPkgMgr {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             dialogInterface.dismiss();
+                            state = ST_FREE;
                         }
                     });
                 }
@@ -355,6 +373,7 @@ public class NewPkgMgr {
 
     private boolean install()
     {
+        state = ST_Install;
         File file = new File(root,apk_name);
         if(!file.exists())
             return false;
@@ -433,12 +452,13 @@ public class NewPkgMgr {
     private ProgressBar dialog_progress;
     private LinearLayout dialog_progress_view;
     private AlertDialog progress_dialog;
+    private TextView progress_tv;
     private AlertDialog pop_progress_dialog()
     {
         if(dialog_progress_view == null) {
             dialog_progress_view = (LinearLayout) LinearLayout.inflate(context, R.layout.progress, null);
             dialog_progress = dialog_progress_view.findViewById(R.id.pb_download);
-
+            progress_tv = dialog_progress_view.findViewById(R.id.tv_download);
             AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.dialog);
             progress_dialog = builder.setCancelable(false)
                     .setView(dialog_progress_view)
@@ -449,7 +469,13 @@ public class NewPkgMgr {
         return progress_dialog;
     }
 
-    public void download(final String url, final String destFileDir, final String destFileName, final LocalCacheMgr.OnDownloadListener listener) {
+    public interface OnDownloadProgressListener{
+        void onProgress(long curr,long max,int progress,String name);
+    }
+
+    public void download(final String url, final String destFileDir, final String destFileName,
+                         final LocalCacheMgr.OnDownloadListener listener,
+                         final OnDownloadProgressListener onProgress) {
 
         Request request = new Request.Builder()
                 .addHeader("User-Agent","Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1")
@@ -517,6 +543,8 @@ public class NewPkgMgr {
                         //下载中更新进度条
                         if(listener!=null)
                             listener.onDownloading(progress,destFileName);
+                        if(onProgress != null)
+                            onProgress.onProgress(sum,total,progress,destFileName);
                     }
                     fos.flush();
                     success = true;
@@ -547,6 +575,11 @@ public class NewPkgMgr {
                 }
             }
         });
+    }
+
+    public boolean is_network_busy()
+    {
+        return state == ST_Download;
     }
 
 }
