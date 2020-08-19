@@ -91,7 +91,7 @@ public class NewPkgMgr {
     public static final int ST_Download = 2;
     public static final int ST_Install = 3;
     private int state = ST_FREE;
-
+    private Info cached;
     private static final int Pid = 1300;
     public NewPkgMgr(Context context)
     {
@@ -154,6 +154,7 @@ public class NewPkgMgr {
 
     public void onload_success(Info info)
     {
+        cached = info;
         Ver self = new Ver(Utils.getAppVersionName(context));
         Ver line = new Ver(info.version);
 
@@ -339,14 +340,14 @@ public class NewPkgMgr {
         }
     }
 
-    private void on_downloaded(boolean is_force)
+    private void on_downloaded(final boolean is_force)
     {
         if(is_force)
         {
             ((Activity)context).runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    install();
+                    install(true);
                 }
             });
         }else{
@@ -357,7 +358,7 @@ public class NewPkgMgr {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             dialogInterface.dismiss();
-                            install();
+                            install(false);
                         }
                     }, "取消", new DialogInterface.OnClickListener() {
                         @Override
@@ -371,7 +372,7 @@ public class NewPkgMgr {
         }
     }
 
-    private boolean install()
+    private boolean install(final boolean is_force)
     {
         state = ST_Install;
         File file = new File(root,apk_name);
@@ -383,16 +384,30 @@ public class NewPkgMgr {
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 boolean hasInstallPermission = context.getPackageManager().canRequestPackageInstalls();
                 if (!hasInstallPermission) {
+                    pop_dialog("检测到没有安装更新的权限,请在设置中允许" + context.getString(R.string.app_name) + "安装应用!", false,
+                            "跳转设置", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    ((MainActivity) context).set_on_resume_task(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            install(is_force);
+                                        }
+                                    });
+                                    Toast.makeText(context,"请点击允许安装应用",Toast.LENGTH_LONG).show();
+                                    startInstallPermissionSettingActivity();
+                                    dialogInterface.dismiss();
+                                }
+                            }, "取消", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    if(is_force)
+                                        android.os.Process.killProcess(android.os.Process.myPid());
+                                    else
+                                        dialogInterface.dismiss();
+                                }
+                            });
 
-                    ((MainActivity) context).set_on_resume_task(new Runnable() {
-                        @Override
-                        public void run() {
-                            install();
-                        }
-                    });
-
-                    Toast.makeText(context,"请点击允许安装应用",Toast.LENGTH_LONG).show();
-                    startInstallPermissionSettingActivity();
                     return false;
                 }
             }
