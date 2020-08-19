@@ -52,6 +52,18 @@
             android:label="dexopt"
             android:process=":dexopt" >
         </service>
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="one.huolong.online.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+        <service
+            android:name="com.huolong.hf.killSelfService"
+            />
     </application>
 
 </manifest>

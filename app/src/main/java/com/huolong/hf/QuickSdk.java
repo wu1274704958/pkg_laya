@@ -354,6 +354,7 @@ public class QuickSdk{
 
     public static void init_(Activity activity_)
     {
+        Log.e("QuickSdk","init_");
         try {
             final InitConfig config = new InitConfig("182083", "huolong03");
             config.setUriConfig(UriConfig.DEFAULT);

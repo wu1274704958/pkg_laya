@@ -46,6 +46,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.huolong.hf.utils.NewPkgMgr;
+import com.huolong.hf.utils.RestartAPPTool;
 import com.huolong.hf.utils.Utils;
 import com.just.agentwebX5.AgentWebX5;
 import com.plug.wv.FullScreenDialog;
@@ -65,6 +67,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.Stack;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -164,6 +167,8 @@ public class MainActivity extends Activity {
     };
     private AlertDialog err_dialog;
     private TextView err_dialog_tv;
+    private NewPkgMgr new_pkg_mgr;
+    private Runnable on_resume_task;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -207,7 +212,8 @@ public class MainActivity extends Activity {
 
         QuickSdk.init(this);
 
-
+        new_pkg_mgr = new NewPkgMgr(this);
+        new_pkg_mgr.load_config();
         go();
 
         Log.e("X5Init","canLoadX5 " +  QbSdk.canLoadX5(this));
@@ -425,7 +431,7 @@ public class MainActivity extends Activity {
         }
         OkHttpClient okHttpClient = new OkHttpClient();
         Request request = new Request.Builder()
-                .url("http://cquc.5imengling.com/api/feedback")
+                .url("http://cquc.xianyul.com/api/feedback")
                 .post(RequestBody.create(JSON,o.toString()))
                 .build();
         okHttpClient.newCall(request).enqueue(new Callback(){
@@ -533,6 +539,7 @@ public class MainActivity extends Activity {
             mAgentWeb.getWebLifeCycle().onResume();
         QuickSdk.onResume(this);
         externCall.onResume();
+        run_on_resume_task();
     }
 
     @Override
@@ -630,7 +637,7 @@ public class MainActivity extends Activity {
                     .setPositiveButton("退出", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            MainActivity.this.finish();
+                            System.exit(0);
                         }
                     })
                     .setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -649,10 +656,7 @@ public class MainActivity extends Activity {
 
     void restart(Context context,Class clzss)
     {
-        final Intent intent = getPackageManager().getLaunchIntentForPackage(getPackageName());
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        finish();
-        startActivity(intent);
+        RestartAPPTool.restartAPP(this,1900);
     }
 
     private LinearLayout mem_info;
@@ -791,6 +795,20 @@ public class MainActivity extends Activity {
                     .create();
 
         err_dialog.show();
+    }
+
+    public void set_on_resume_task( Runnable task)
+    {
+        on_resume_task = task;
+    }
+
+    void run_on_resume_task()
+    {
+        if(on_resume_task != null)
+        {
+            on_resume_task.run();
+            on_resume_task = null;
+        }
     }
 
 
