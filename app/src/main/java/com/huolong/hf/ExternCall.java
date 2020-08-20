@@ -60,6 +60,7 @@ public class ExternCall {
     public static final int CMD_QUICK_ACTION = 48;
     public static final int RegResume = 14;
     public static final int PkgInfo = 15;
+    public static final int ALive = 16;
 
     public ExternCall(AgentWebX5 web,Activity activity) {
         this.web = web;
@@ -189,22 +190,23 @@ public class ExternCall {
             case RegResume:
                 reg_resume_cmdid = id;
                 break;
-            case PkgInfo: {
-
-                JSONObject o = new JSONObject();
-                o.put("ver", Utils.getAppVersionName(activity));
-                o.put("model", Build.MODEL);
-                o.put("channel","AL");
-                sendMessageToGame(callbacks,id,o.toString());
-                break;
-            }
+            case PkgInfo:
+                {
+                    JSONObject o = new JSONObject();
+                    o.put("ver", Utils.getAppVersionName(activity));
+                    o.put("model", Build.MODEL);
+                    o.put("channel", "AL");
+                    sendMessageToGame(callbacks, id, o.toString());
+                    break;
+                }
+            case ALive:
+                {
+                    GameAlive = true;
+                    break;
+                }
         }
-
-        //if(is_destroy)
-        //{
-        //    rm(id);
-        //}
     }
+
 
     private void add(int id,MyCB cb) {
         if(callbacks.get(id) == null)
@@ -216,9 +218,11 @@ public class ExternCall {
     }
 
     private int reg_resume_cmdid = -1;
-
+    private long pause_time_point = 0;
+    private boolean GameAlive = true;
     public void onResume()
     {
+        GameAlive = false;
         if(reg_resume_cmdid > -1) {
             JSONObject o = new JSONObject();
             try {
@@ -227,6 +231,19 @@ public class ExternCall {
                 e.printStackTrace();
             }
             sendMessageToGame_Nodel(callbacks, reg_resume_cmdid, o.toString());
+        }
+
+
+        if(System.currentTimeMillis() - pause_time_point > 1000 * 60 * 10)
+        {
+            web.getLoader().loadUrl(((MainActivity)activity).getGoUrl());
+        }else{
+            my_handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if(!GameAlive) web.getLoader().loadUrl(((MainActivity)activity).getGoUrl());
+                }
+            },500);
         }
     }
     public void onPause()
@@ -240,5 +257,7 @@ public class ExternCall {
             }
             sendMessageToGame_Nodel(callbacks, reg_resume_cmdid, o.toString());
         }
+
+        pause_time_point = System.currentTimeMillis();
     }
 }

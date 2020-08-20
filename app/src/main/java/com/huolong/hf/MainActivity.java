@@ -258,10 +258,10 @@ public class MainActivity extends Activity {
             launch_update_mem();
         }
 
-        if( !QbSdk.canLoadX5(this))
-        {
-            pop_install_x5_dialog();
-        }
+        //if( !QbSdk.canLoadX5(this))
+        //{
+        //    pop_install_x5_dialog();
+        //}
 
         Log.e(TAG,"root "+ root.getChildCount() + (root.getChildAt(0) instanceof ImageView));
 
@@ -312,6 +312,7 @@ public class MainActivity extends Activity {
 
     private void hide_splash()
     {
+        if(is_hide_splash) return;
         if(loding_time < 2000)
         {
             need_hide_splash = true;
@@ -782,6 +783,7 @@ public class MainActivity extends Activity {
                     .setPositiveButton("确定", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
+                            hide_splash();
                             mAgentWeb.getLoader().loadUrl("http://debugtbs.qq.com");
                         }
                     })
@@ -813,5 +815,9 @@ public class MainActivity extends Activity {
         }
     }
 
+    public String getGoUrl()
+    {
+        return url;
+    }
 
 }
