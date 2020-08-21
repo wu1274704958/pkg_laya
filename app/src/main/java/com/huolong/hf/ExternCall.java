@@ -234,7 +234,7 @@ public class ExternCall {
         }
 
 
-        if(System.currentTimeMillis() - pause_time_point > 1000 * 60 * 10)
+        if(System.currentTimeMillis() - pause_time_point > 1000 * 60 * 60)
         {
             web.getLoader().loadUrl(((MainActivity)activity).getGoUrl());
         }else{
