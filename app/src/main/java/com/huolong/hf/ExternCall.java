@@ -22,6 +22,7 @@ import com.just.agentwebX5.AgentWebX5;
 import com.plug.oaid.Oaid;
 import com.plug.reg.Reg;
 import com.plug.wv.WebView;
+import com.xianyu.hyzmw.nearme.gamecenter.R;
 
 import org.json.JSONArray;
 import org.json.JSONException;

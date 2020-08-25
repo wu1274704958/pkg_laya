@@ -55,6 +55,7 @@ import com.tencent.smtt.export.external.interfaces.WebResourceResponse;
 import com.tencent.smtt.sdk.QbSdk;
 import com.tencent.smtt.sdk.WebSettings;
 import com.tencent.smtt.sdk.WebView;
+import com.xianyu.hyzmw.nearme.gamecenter.R;
 
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
@@ -106,7 +107,7 @@ public class MainActivity extends Activity {
     });
     AgentWebX5 mAgentWeb;
     //private String url = "http://debugtbs.qq.com";
-    private String url = "http://cqcdn.aolonggame.cn/cqres/web_online/index.php";
+    private String url = "http://cqcdn.aolonggame.cn/cqres/review2/index.php";
     //private String url = "http://47.102.115.132:8081/cqres/web_online/index.php";
     //private String url = "http://10.10.6.67:8900/bin/index.html";
     FrameLayout root;

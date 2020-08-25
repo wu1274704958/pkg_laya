@@ -21,7 +21,7 @@ import androidx.core.content.FileProvider;
 
 import com.huolong.hf.LocalCacheMgr;
 import com.huolong.hf.MainActivity;
-import com.huolong.hf.R;
+import com.xianyu.hyzmw.nearme.gamecenter.R;
 
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;

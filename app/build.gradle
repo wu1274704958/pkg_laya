@@ -2,24 +2,24 @@ apply plugin: 'com.android.application'
 
 android {
     signingConfigs {
-        release {
-            storeFile file('C:\\Users\\admin\\sign_sha\\wws.jks')
-            storePassword '142539'
-            keyAlias = 'Default'
-            keyPassword '142539'
-        }
         debug {
-            storeFile file('C:\\Users\\admin\\sign_sha\\wws.jks')
-            storePassword '142539'
-            keyAlias = 'Default'
-            keyPassword '142539'
+            storeFile file('cq1.keystore')
+            storePassword 'happi123'
+            keyAlias = '1'
+            keyPassword 'fd'
+        }
+        release {
+            storeFile file('cq1.keystore')
+            storePassword 'happi123'
+            keyAlias = '1'
+            keyPassword 'fd'
         }
     }
 
     compileSdkVersion 29
     buildToolsVersion "29.0.0"
     defaultConfig {
-        applicationId "com.huolong.hf"
+        applicationId "com.xianyu.hyzmw.nearme.gamecenter"
         minSdkVersion 14
         targetSdkVersion 29
         versionCode 202008205
@@ -39,8 +39,18 @@ android {
     }
     android.applicationVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "cq_no_extern.apk"
-
+            def apkName = "cq_${variant.applicationId}_${variant.versionName}"
+            // 判断是否为空
+            if (!variant.flavorName.isEmpty()) {
+                apkName += "_${variant.flavorName}"
+            }
+            // 赋值属性
+            String time = new Date().format("_YYYYMMddHH")
+            if (variant.buildType.name.equals("release")){
+                outputFileName = apkName + "_Replease" + time + ".apk"
+            }else {
+                outputFileName = apkName + "_Debug" +time + ".apk"
+            }
         }
     }
 }
