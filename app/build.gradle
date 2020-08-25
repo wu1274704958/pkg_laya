@@ -22,10 +22,14 @@ android {
         applicationId "com.huolong.hf"
         minSdkVersion 14
         targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
+        versionCode 202008205
+        versionName "2.3.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         signingConfig signingConfigs.release
+
+        ndk {
+            abiFilters "armeabi", "armeabi-v7a", "x86", "mips"
+        }
     }
     buildTypes {
         release {
@@ -53,9 +57,12 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     testImplementation 'junit:junit:4.12'
 
-    api 'com.just.agentweb:agentweb:4.1.3'
+    //api 'com.just.agentweb:agentweb:4.1.3'
+    compile 'com.just.agentwebX5:agentwebX5:2.0.0'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+    compile files('libs/tbs_sdk.jar')
 
     implementation 'com.squareup.okhttp3:okhttp:4.8.0'
 }

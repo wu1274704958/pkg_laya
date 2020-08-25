@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -16,7 +17,8 @@ import androidx.annotation.NonNull;
 
 import com.huolong.hf.utils.BatteryReceiver;
 import com.huolong.hf.utils.NetMonitor;
-import com.just.agentweb.AgentWeb;
+import com.huolong.hf.utils.Utils;
+import com.just.agentwebX5.AgentWebX5;
 import com.plug.oaid.Oaid;
 import com.plug.reg.Reg;
 import com.plug.wv.WebView;
@@ -29,7 +31,7 @@ import org.json.JSONObject;
 
 public class ExternCall {
     private static final String TAG = "ExternCall";
-    AgentWeb web;
+    AgentWebX5 web;
     SparseArray<ValueCallback<JSONObject>> callbacks;
     Activity activity;
     public static final int WSendMessageToGame = 1;
@@ -55,17 +57,20 @@ public class ExternCall {
     public static final int ShowEditDialog = 13;
     public static final int CMD_QUICK_REG_NOTIF = 47;
     public static final int CMD_QUICK_ACTION = 48;
+    public static final int RegResume = 14;
+    public static final int PkgInfo = 15;
+    public static final int ALive = 16;
 
-    public ExternCall(AgentWeb web,Activity activity) {
+    public ExternCall(AgentWebX5 web,Activity activity) {
         this.web = web;
         this.activity = activity;
         this.callbacks = new SparseArray<ValueCallback<JSONObject>>();
     }
 
     static class MyCB implements ValueCallback<JSONObject> {
-        AgentWeb web;
+        AgentWebX5 web;
 
-        public MyCB(AgentWeb web) {
+        public MyCB(AgentWebX5 web) {
             this.web = web;
         }
 
@@ -73,7 +78,7 @@ public class ExternCall {
         public void onReceiveValue(JSONObject jsonObject) {
             try {
                 Log.e(TAG,"onReceiveValue" + jsonObject.toString());
-                web.getJsAccessEntrace().quickCallJs("extern_back", jsonObject.toString());
+                web.getJsEntraceAccess().quickCallJs("extern_back", jsonObject.toString());
             } catch (Exception e) {
                 Log.e(TAG,e.getMessage());
             }
@@ -181,6 +186,23 @@ public class ExternCall {
                     oth = body.getJSONObject("oth");
                 editDialog.go(id,res,oth);
                 break;
+            case RegResume:
+                reg_resume_cmdid = id;
+                break;
+            case PkgInfo:
+                {
+                    JSONObject o = new JSONObject();
+                    o.put("ver", Utils.getAppVersionName(activity));
+                    o.put("model", Build.MODEL);
+                    o.put("channel", "AL");
+                    sendMessageToGame(callbacks, id, o.toString());
+                    break;
+                }
+            case ALive:
+                {
+                    GameAlive = true;
+                    break;
+                }
         }
 
         //if(is_destroy)
@@ -196,5 +218,49 @@ public class ExternCall {
     private void rm(int id) {
         if(callbacks.get(id) != null)
             callbacks.remove(id);
+    }
+
+    private int reg_resume_cmdid = -1;
+    private long pause_time_point = 0;
+    private boolean GameAlive = true;
+    public void onResume()
+    {
+        GameAlive = false;
+        if(reg_resume_cmdid > -1) {
+            JSONObject o = new JSONObject();
+            try {
+                o.put("act","onResume");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            sendMessageToGame_Nodel(callbacks, reg_resume_cmdid, o.toString());
+        }
+
+
+        if(System.currentTimeMillis() - pause_time_point > 1000 * 60 * 60)
+        {
+            web.getLoader().loadUrl(((MainActivity)activity).getGoUrl());
+        }else{
+            my_handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if(!GameAlive) web.getLoader().loadUrl(((MainActivity)activity).getGoUrl());
+                }
+            },500);
+        }
+    }
+    public void onPause()
+    {
+        if(reg_resume_cmdid > -1) {
+            JSONObject o = new JSONObject();
+            try {
+                o.put("act","onPause");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            sendMessageToGame_Nodel(callbacks, reg_resume_cmdid, o.toString());
+        }
+
+        pause_time_point = System.currentTimeMillis();
     }
 }

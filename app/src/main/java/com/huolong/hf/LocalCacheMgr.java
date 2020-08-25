@@ -6,13 +6,12 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
-import android.webkit.WebView;
-
 import androidx.annotation.RequiresApi;
 
 import com.huolong.hf.utils.Hash;
+import com.tencent.smtt.export.external.interfaces.WebResourceRequest;
+import com.tencent.smtt.export.external.interfaces.WebResourceResponse;
+import com.tencent.smtt.sdk.WebView;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -75,6 +74,8 @@ public class LocalCacheMgr {
     public static final Integer MAX_RETRY = 10;
     private Handler handler = new Handler(Looper.getMainLooper());
 
+    private boolean use_web_download = false;
+
     private boolean not_cache_js = false;
     public LocalCacheMgr(String url,Activity activity) {
         this.activity = activity;
@@ -85,7 +86,8 @@ public class LocalCacheMgr {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request)
+    public WebResourceResponse shouldInterceptRequest(WebView webView,
+                                                      WebResourceRequest request)
     {
 
         String url = request.getUrl().toString();
@@ -104,6 +106,8 @@ public class LocalCacheMgr {
                 return new WebResourceResponse(mime,"UTF-8",is);
             }
         }
+        if(use_web_download)
+            return null;
         try {
             if(
                     url.endsWith(".png") || ( !not_cache_js && url.endsWith(".js")) || url.endsWith(".mp3") ||

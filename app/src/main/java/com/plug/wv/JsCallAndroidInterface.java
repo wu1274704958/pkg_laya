@@ -8,8 +8,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
 
-
-import com.just.agentweb.AgentWeb;
+import com.just.agentwebX5.AgentWebX5;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -21,12 +20,12 @@ import org.json.JSONObject;
 public class JsCallAndroidInterface {
     private Handler deliver = new Handler(Looper.getMainLooper());
     private final FullScreenDialog fullScreenDialog;
-    private AgentWeb agent;
+    private AgentWebX5 agent;
     private Context context;
     FullScreenDialog.OnWVCb cb;
 
 
-    public JsCallAndroidInterface(FullScreenDialog dialog,AgentWeb agent, Context context, FullScreenDialog.OnWVCb cb) {
+    public JsCallAndroidInterface(FullScreenDialog dialog,AgentWebX5 agent, Context context, FullScreenDialog.OnWVCb cb) {
         this.agent = agent;
         this.context = context;
         fullScreenDialog = dialog;

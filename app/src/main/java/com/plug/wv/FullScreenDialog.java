@@ -16,16 +16,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.webkit.ConsoleMessage;
-import android.webkit.JsResult;
-import android.webkit.WebView;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.VideoView;
 
 
-import com.just.agentweb.AgentWeb;
-import com.just.agentweb.WebChromeClient;
+import com.just.agentwebX5.AgentWebX5;
+import com.tencent.smtt.export.external.interfaces.ConsoleMessage;
+import com.tencent.smtt.export.external.interfaces.JsResult;
+import com.tencent.smtt.sdk.WebChromeClient;
 
 import java.lang.reflect.Method;
 
@@ -35,7 +34,7 @@ import java.lang.reflect.Method;
  * Date is 2019/5/7
  **/
 public class FullScreenDialog extends Dialog {
-    AgentWeb mAgentWeb;
+    AgentWebX5 mAgentWeb;
     private Context context;
     private AlertDialog alertDialog;
     private String url;
@@ -128,9 +127,10 @@ public class FullScreenDialog extends Dialog {
             root.addView(iv, 1, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         }
 
-        mAgentWeb = AgentWeb.with((Activity) context)//传入Activity
+        mAgentWeb = AgentWebX5.with((Activity) context)//传入Activity
                 .setAgentWebParent(root, root.getLayoutParams())//传入AgentWeb 的父控件 ，如果父控件为 RelativeLayout ， 那么第二参数需要传入 RelativeLayout.LayoutParams
                 .useDefaultIndicator()// 使用默认进度条
+                .defaultProgressBarColor()
                 .setWebChromeClient(mWebChromeClient)
                 .createAgentWeb()//
                 .go(url);
@@ -144,7 +144,7 @@ public class FullScreenDialog extends Dialog {
 
     private WebChromeClient mWebChromeClient=new WebChromeClient(){
         @Override
-        public void onProgressChanged(WebView view, int newProgress) {
+        public void onProgressChanged( com.tencent.smtt.sdk.WebView view, int newProgress) {
 
             cb.onProcess(newProgress);
             //do you work
@@ -163,7 +163,7 @@ public class FullScreenDialog extends Dialog {
         }
 
         @Override
-        public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
+        public boolean onCreateWindow(com.tencent.smtt.sdk.WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN){
                 view.getSettings().setAllowUniversalAccessFromFileURLs(true);
                 view.getSettings().setAllowFileAccessFromFileURLs(true);
@@ -209,7 +209,7 @@ public class FullScreenDialog extends Dialog {
         }
 
         @Override
-        public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
+        public boolean onJsAlert(com.tencent.smtt.sdk.WebView view, String url, String message, JsResult result) {
             Log.e(TAG,"=======  " +  url );
             return false;
         }
@@ -221,7 +221,7 @@ public class FullScreenDialog extends Dialog {
 
     public void callJs(String method,String s) {
         Log.e(TAG,".... " + mAgentWeb + " " + method + " " + s);
-        mAgentWeb.getJsAccessEntrace().quickCallJs(method,s);
+        mAgentWeb.getJsEntraceAccess().quickCallJs(method,s);
     }
 
     @Override
