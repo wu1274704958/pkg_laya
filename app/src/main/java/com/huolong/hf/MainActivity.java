@@ -659,7 +659,7 @@ public class MainActivity extends Activity {
 
     void restart(Context context,Class clzss)
     {
-        RestartAPPTool.restartAPP(this,1900);
+        RestartAPPTool.restartAPP2(this,1900);
     }
 
     private LinearLayout mem_info;
