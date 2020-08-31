@@ -19,3 +19,17 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-dontwarn org.bouncycastle.**
+-keep class org.bouncycastle.** {*;}
+-keep, includedescriptorclasses class com.asus.msa.SupplementaryDID.** { *; }
+-keepclasseswithmembernames class com.asus.msa.SupplementaryDID.** { *; }
+-keep, includedescriptorclasses class com.asus.msa.sdid.** { *; }
+-keepclasseswithmembernames class com.asus.msa.sdid.** { *; }
+-keep public class com.netease.nis.sdkwrapper.Utils {public <methods>;}
+-keep class com.bun.miitmdid.**{*;}
+-keep class com.bun.lib.**{*;}
+-keep class com.samsung.android.deviceidservice.**{*;}
+-keep class a.**{*;}
+-dontwarn com.reyun.tracking.**
+-keep class com.reyun.tracking.** {*;}

@@ -28,6 +28,7 @@ import com.bytedance.applog.InitConfig;
 import com.bytedance.applog.util.UriConfig;
 import com.plug.oaid.DeviceIdUtils;
 import com.plug.oaid.Oaid;
+import com.reyun.tracking.sdk.Tracking;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -40,6 +41,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class QuickSdk{
+    private static final String TAG_HC = "HotCloud";
     public static boolean RequestQuit = false;
     public static final String Product_Code = "55611690941333531013279334936021";
     public static final String Product_Key = "59365275";
@@ -68,6 +70,7 @@ public class QuickSdk{
     public static final int FUNC_EXIT               = 4;
     public static final int FUNC_REGISTER           = 5;
     public static final int FUNC_BACK_PRESSED       = 27;
+    public static final int FUNC_GenerateOrder       = 28;
 
     private static Activity activity;
     private static Handler handler;
@@ -290,6 +293,42 @@ public class QuickSdk{
         }
     }
 
+    static class User{
+        public String acc = "";
+        public String pwd = "";
+        public String token = "";
+
+        public String getToken() {
+            return token;
+        }
+
+        public User setToken(String token) {
+            this.token = token;
+            return this;
+        }
+
+        public User() {
+        }
+
+        public String getAcc() {
+            return acc;
+        }
+
+        public User setAcc(String acc) {
+            this.acc = acc;
+            return this;
+        }
+
+        public String getPwd() {
+            return pwd;
+        }
+
+        public User setPwd(String pwd) {
+            this.pwd = pwd;
+            return this;
+        }
+    }
+
 
     public static void notifGame(int notif_id,int state_id,JSONObject obj)
     {
@@ -372,7 +411,10 @@ public class QuickSdk{
             AppLog.setHeaderInfo(headerMap);
 
             AppLog.setUserUniqueID(DeviceIdUtils.getDeviceId(activity_));
-
+            Log.e(TAG_HC,"init b");
+            Tracking.setDebugMode(true);
+            Tracking.initWithKeyAndChannelId(activity_.getApplication(),"f554949c3966bb1924195b8548896ea4","_default_");
+            Log.e(TAG_HC,"init e");
         }catch (Exception e)
         {
             Logw.e("init err = " + e.toString());
@@ -449,10 +491,14 @@ public class QuickSdk{
             switch (func) {
                 case FUNC_REGISTER:
                 {
-                    register(activity,args.getString(0));
+                    User u = objForIdx(User.class,args,1);
+                    register(activity,args.getString(0),u);
+                    login(activity,u);
+                    break;
                 }
                 case FUNC_LOGIN: {
-                    login(activity);
+                    User u = objForIdx(User.class,args,0);
+                    login(activity,u);
                     break;
                 }
                 case FUNC_SetGameRoleInfo: {
@@ -489,6 +535,13 @@ public class QuickSdk{
                     onBackPress();
                     break;
                 }
+                case FUNC_GenerateOrder:{
+                    onGenerateOrder(activity,
+                            formJson(Order.class,args.getJSONObject(0)),
+                            formJson(ServerInfo.class,args.getJSONObject(1)),
+                            args.getJSONObject(2));
+                    break;
+                }
             }
         }catch (Exception e)
         {
@@ -496,15 +549,19 @@ public class QuickSdk{
         }
     }
 
-    private static void register(Activity activity, String string) {
+    private static void register(Activity activity, String string,User u) {
         GameReportHelper.onEventRegister(string,true);
+        Log.e(TAG_HC,"register " + u.acc);
+        Tracking.setRegisterWithAccountID(u.acc);
     }
 
-    public static void login(Activity activity)
+    public static void login(Activity activity,User u)
     {
         Logw.e("login b");
         GameReportHelper.onEventLogin("",true);
         Logw.e("login e");
+        Log.e(TAG_HC,"login " + u.acc);
+        Tracking.setLoginSuccessBusiness(u.acc);
     }
 
     public static void setGameRoleInfo(Activity activity,RoleInfo info,Boolean is_create,SetGameRoleInfoEx oths)
@@ -533,6 +590,21 @@ public class QuickSdk{
 
         GameReportHelper.onEventPurchase("gift",order.goodsName,order.goodsID,
                 Integer.valueOf(order.count),oths.getString("channel"),"¥",true,Integer.valueOf(order.amount));
+        float amount = 0.f;
+        try {
+            amount = Float.parseFloat(order.amount);
+        }catch (Exception e){}
+        Log.e(TAG_HC,"pay " + order.cpOrderID + " " + oths.getString("channel")  + "CNY" + amount);
+        Tracking.setPayment(order.cpOrderID,oths.getString("channel"),"CNY",amount );
+    }
+
+    public static void onGenerateOrder(Activity activity,final Order order, ServerInfo serverInfo,JSONObject oths) throws JSONException {
+        float amount = 0.f;
+        try {
+            amount = Float.parseFloat(order.amount);
+        }catch (Exception e){}
+        Log.e(TAG_HC,"onGenerateOrder " + order.cpOrderID +  "CNY" + amount);
+        Tracking.setOrder(order.cpOrderID,"CNY" , amount);
     }
 
     public static <T> T formJson(Class<T> tClass,JSONObject object) throws JSONException, InstantiationException, IllegalAccessException, InvocationTargetException {
@@ -644,6 +716,18 @@ public class QuickSdk{
         return res;
     }
 
+    public static <T> T objForIdx(Class<T> tClass,JSONArray arr,int idx) throws JSONException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        JSONObject oth = null;
+        try{
+            oth = arr.getJSONObject(idx);
+        }catch (JSONException e)
+        {
+            oth = new JSONObject();
+        }
+
+        return formJson(tClass,oth);
+    }
+
     public static void load_qk_check()
     {
 //        Logw.e("b load library!!!");
@@ -667,12 +751,15 @@ public class QuickSdk{
 
     }
 
-
+    public static long play_time = 0;
+    public static long in_time = 0;
+    public static long out_time = 0;
     public static void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
 
     }
 
     public static void onResume(Activity activity) {
+        in_time = System.currentTimeMillis();
     }
 
     public static void onStart(Activity activity) {
@@ -682,6 +769,10 @@ public class QuickSdk{
     }
 
     public static void onPause(Activity activity) {
+        long this_dur = thisTimesTime();
+        Log.e(TAG_HC," setPageDuration " + activity.getClass().getName() + " " +this_dur);
+        Tracking.setPageDuration(activity.getClass().getName(),this_dur);
+        play_time += this_dur;
     }
 
     public static void onStop(Activity activity) {
@@ -697,6 +788,23 @@ public class QuickSdk{
     public static void onBackPress()
     {
 
+    }
+
+    public static long thisTimesTime()
+    {
+        out_time = System.currentTimeMillis();
+        long dur = out_time - in_time;
+        in_time = out_time;
+        return dur;
+    }
+
+    public static void requestExit() {
+
+        play_time += thisTimesTime();
+        Log.e(TAG_HC," setAppDuration " + play_time);
+        Tracking.setAppDuration(play_time);
+        Log.e(TAG_HC," exitSdk ");
+        Tracking.exitSdk();
     }
 
     public static void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)

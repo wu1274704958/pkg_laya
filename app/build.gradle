@@ -20,16 +20,21 @@ android {
     buildToolsVersion "29.0.0"
     defaultConfig {
         applicationId "one.huolong.online"
-        minSdkVersion 14
+        minSdkVersion 21
         targetSdkVersion 29
         versionCode 202008201
         versionName "2.3.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         signingConfig signingConfigs.release
 
-        ndk {
-            abiFilters "armeabi", "armeabi-v7a", "x86", "mips"
-        }
+        ndk { abiFilters  'armeabi-v7a','x86','arm64-v8a','x86_64','armeabi' }
+    }
+    packagingOptions {
+        doNotStrip "*/armeabi-v7a/*.so"
+        doNotStrip "*/x86/*.so"
+        doNotStrip "*/arm64-v8a/*.so"
+        doNotStrip "*/x86_64/*.so"
+        doNotStrip "armeabi.so"
     }
     buildTypes {
         release {
@@ -62,8 +67,11 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     compile (name:'RangersAppLog-Lite-cn-3.3.12',ext:'aar')
+    compile (name:'oaid_sdk_1.0.22',ext:'aar')
 
     compile files('libs/tbs_sdk.jar')
+    compile files('libs/tracking1.6.6.jar')
+    compile files('libs/bcprov-jdk16-139.jar')
 
     implementation 'com.squareup.okhttp3:okhttp:4.8.0'
 }

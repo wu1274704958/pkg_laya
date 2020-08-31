@@ -640,6 +640,7 @@ public class MainActivity extends Activity {
                     .setPositiveButton("退出", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
+                            QuickSdk.requestExit();
                             System.exit(0);
                         }
                     })
