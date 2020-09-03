@@ -235,7 +235,7 @@ public class MainActivity extends Activity {
             pb = splash_view.findViewById(R.id.pb1);
             sp_tv = splash_view.findViewById(R.id.sp_tv2);
             tv_ver = splash_view.findViewById(R.id.tv_ver);
-            tv_ver.setText("v"+ Utils.getAppVersionName(this) + "_x5_"+ (QbSdk.canLoadX5(this) ? "1":"0"));
+            tv_ver.setText("v"+Utils.getAppVersionName(this) + "_x5_"+ (QbSdk.canLoadX5(this) ? "1":"0"));
             Logw.e("pb == null = " + (pb == null));
             root.addView(splash_view,new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
@@ -631,6 +631,7 @@ public class MainActivity extends Activity {
                     .setPositiveButton("退出", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
+                            QuickSdk.requestExit();
                             System.exit(0);
                         }
                     })
@@ -650,7 +651,7 @@ public class MainActivity extends Activity {
 
     void restart(Context context,Class clzss)
     {
-        RestartAPPTool.restartAPP(this,1900);
+        RestartAPPTool.restartAPP2(this,1900);
     }
 
     private LinearLayout mem_info;

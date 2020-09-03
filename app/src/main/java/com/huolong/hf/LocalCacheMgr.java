@@ -102,7 +102,7 @@ public class LocalCacheMgr {
             {
 
                 String mime = request.getRequestHeaders().get("Accept");
-                Log.e(TAG,"using cached file " + sub);
+                //Log.e(TAG,"using cached file " + sub);
                 return new WebResourceResponse(mime,"UTF-8",is);
             }
         }
@@ -118,7 +118,7 @@ public class LocalCacheMgr {
                 File f = new File(localDir +"/"+ md5);
                 if(f.exists() || get_state(md5) == ST_SUCCESS )
                 {
-                    Log.e(TAG, "using cached file " + url + " " + md5);
+                   // Log.e(TAG, "using cached file " + url + " " + md5);
                     InputStream in = new FileInputStream(f);
                     return new WebResourceResponse(mime, "UTF-8", in);
                 }else
@@ -128,7 +128,7 @@ public class LocalCacheMgr {
                     PipedInputStream in = new PipedInputStream(out);
 
                     down(md5);
-                    Log.e(TAG, "download file " + url + " " + md5);
+                    //Log.e(TAG, "download file " + url + " " + md5);
                     download(out,url, mime, localDir, md5, downloadListener);
 
                     return new WebResourceResponse(mime, "UTF-8", in);
@@ -144,7 +144,7 @@ public class LocalCacheMgr {
     public OnDownloadListener downloadListener = new OnDownloadListener() {
         @Override
         public void onDownloadSuccess(File file, String name) {
-            Log.e(TAG, "download success " + name);
+            //Log.e(TAG, "download success " + name);
             to_success(name);
         }
 

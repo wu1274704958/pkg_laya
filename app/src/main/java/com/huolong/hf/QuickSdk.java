@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class QuickSdk{
+    private static final String TAG_HC = "HotCloud";
     public static boolean RequestQuit = false;
     public static final String Product_Code = "55611690941333531013279334936021";
     public static final String Product_Key = "59365275";
@@ -60,6 +61,7 @@ public class QuickSdk{
     public static final int FUNC_EXIT               = 4;
     public static final int FUNC_REGISTER           = 5;
     public static final int FUNC_BACK_PRESSED       = 27;
+    public static final int FUNC_GenerateOrder       = 28;
 
     private static Activity activity;
     private static Handler handler;
@@ -282,6 +284,42 @@ public class QuickSdk{
         }
     }
 
+    static class User{
+        public String acc = "";
+        public String pwd = "";
+        public String token = "";
+
+        public String getToken() {
+            return token;
+        }
+
+        public User setToken(String token) {
+            this.token = token;
+            return this;
+        }
+
+        public User() {
+        }
+
+        public String getAcc() {
+            return acc;
+        }
+
+        public User setAcc(String acc) {
+            this.acc = acc;
+            return this;
+        }
+
+        public String getPwd() {
+            return pwd;
+        }
+
+        public User setPwd(String pwd) {
+            this.pwd = pwd;
+            return this;
+        }
+    }
+
 
     public static void notifGame(int notif_id,int state_id,JSONObject obj)
     {
@@ -423,7 +461,8 @@ public class QuickSdk{
         try {
             switch (func) {
                 case FUNC_LOGIN: {
-                    login(activity);
+                    User u = objForIdx(User.class,args,0);
+                    login(activity,u);
                     break;
                 }
                 case FUNC_SetGameRoleInfo: {
@@ -476,7 +515,7 @@ public class QuickSdk{
         }
     }
 
-    public static void login(Activity activity)
+    public static void login(Activity activity,User u)
     {
         Logw.e("login b");
 
@@ -612,6 +651,18 @@ public class QuickSdk{
         return res;
     }
 
+    public static <T> T objForIdx(Class<T> tClass,JSONArray arr,int idx) throws JSONException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        JSONObject oth = null;
+        try{
+            oth = arr.getJSONObject(idx);
+        }catch (JSONException e)
+        {
+            oth = new JSONObject();
+        }
+
+        return formJson(tClass,oth);
+    }
+
     public static void load_qk_check()
     {
 //        Logw.e("b load library!!!");
@@ -665,6 +716,11 @@ public class QuickSdk{
 
     public static void onBackPress()
     {
+
+    }
+
+    public static void requestExit() {
+
 
     }
 
