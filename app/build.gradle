@@ -22,8 +22,8 @@ android {
         applicationId "one.huolong.online"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 202008201
-        versionName "2.3.2"
+        versionCode 202009023
+        versionName "2.3.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         signingConfig signingConfigs.release
 
@@ -44,8 +44,18 @@ android {
     }
     android.applicationVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "cq_extern_al.apk"
-
+            def apkName = "cq_${variant.applicationId}_${variant.versionName}"
+            // 判断是否为空
+            if (!variant.flavorName.isEmpty()) {
+                apkName += "_${variant.flavorName}"
+            }
+            // 赋值属性
+            String time = new Date().format("_YYYYMMddHH")
+            if (variant.buildType.name.equals("release")){
+                outputFileName = apkName + "_release" + time + ".apk"
+            }else {
+                outputFileName = apkName + "_debug" +time + ".apk"
+            }
         }
     }
 }
