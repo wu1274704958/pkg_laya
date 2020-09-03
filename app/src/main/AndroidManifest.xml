@@ -29,6 +29,8 @@
         android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
 
         >
+        <meta-data android:name="U8_APPID" android:value="151"/>
+        <meta-data android:name="U8_APPKEY" android:value="2d16ee4784b59331e384c68597c15777"/>
         <meta-data android:name="android.notch_support" android:value="true"/>
         <meta-data
             android:name="android.max_aspect"

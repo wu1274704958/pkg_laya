@@ -21,6 +21,15 @@ import android.content.Context;
 
 import androidx.core.app.ActivityCompat;
 
+import com.u8.sdk.PayParams;
+import com.u8.sdk.ProductQueryResult;
+import com.u8.sdk.U8Code;
+import com.u8.sdk.U8SDK;
+import com.u8.sdk.UserExtraData;
+import com.u8.sdk.platform.U8InitListener;
+import com.u8.sdk.platform.U8Platform;
+import com.u8.sdk.verify.UToken;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,6 +39,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class QuickSdk{
     private static final String TAG_HC = "HotCloud";
@@ -379,7 +389,7 @@ public class QuickSdk{
 
     public static void gameActivity_onNewIntent(Activity activity,Intent intent)
     {
-
+        U8SDK.getInstance().onNewIntent(intent);
     }
 
     public static void init_(Activity activity)
@@ -505,7 +515,7 @@ public class QuickSdk{
                     break;
                 }
                 case FUNC_BACK_PRESSED:{
-                    onBackPress();
+                    //onBackPress();
                     break;
                 }
             }
@@ -518,18 +528,35 @@ public class QuickSdk{
     public static void login(Activity activity,User u)
     {
         Logw.e("login b");
-
+        U8Platform.getInstance().login(activity);
         Logw.e("login e");
     }
 
     public static void setGameRoleInfo(Activity activity,RoleInfo roleInfo,Boolean is_create,SetGameRoleInfoEx oths)
     {
-
+        UserExtraData data = new UserExtraData();
+        data.setDataType(is_create ? 2 : oths.is_enter ? 3 : 4);
+        try {
+            data.setServerID(Integer.parseInt(roleInfo.serverName));
+        }catch (Exception e)
+        {
+            data.setServerID(1);
+        }
+        data.setServerName(oths.ServerName);
+        data.setRoleID(roleInfo.gameRoleID);
+        data.setRoleName(roleInfo.gameRoleName);
+        data.setPartyName(oths.FamilyName != null ? oths.FamilyName : "" );
+        data.setRoleLevel(roleInfo.gameRoleLevel);
+        data.setVip(roleInfo.vipLevel);
+        data.setMoneyNum(oths.money);
+        data.setRoleCreateTime(System.currentTimeMillis()/1000);
+        data.setRoleLevelUpTime(System.currentTimeMillis()/1000);
+        U8Platform.getInstance().submitExtraData(data);
     }
 
     public static void logout(Activity activity)
     {
-
+        U8Platform.getInstance().logout();
     }
 
     public static void exit(Activity activity)
@@ -539,7 +566,22 @@ public class QuickSdk{
 
     public static void pay(Activity activity,final Order order, ServerInfo serverInfo,SetGameRoleInfoEx oths)
     {
-
+        PayParams params = new PayParams();
+        params.setBuyNum(1);        //购买数量，固定1
+        params.setCoinNum(oths.money);     //当前玩家身上拥有的游戏币数量
+        params.setExtension(order.cpOrderID); //游戏自定义数据，充值成功，回调游戏服的时候，会原封不动返回
+        params.setPrice(Integer.parseInt(order.amount));     //单位 元
+        params.setProductId(order.goodsID);   //产品ID
+        params.setProductName(order.count +""+ order.goodsName); //产品名称
+        params.setProductDesc(order.count +""+ order.goodsName);   //产品描述
+        params.setRoleId(serverInfo.gameRoleID);      //角色ID
+        params.setRoleLevel(Integer.parseInt(serverInfo.gameRoleLevel));        //角色等级
+        params.setRoleName(serverInfo.gameRoleName);    //角色名称
+        params.setServerId(serverInfo.serverID);       //服务器ID
+        params.setServerName(serverInfo.serverName);      //服务器名称
+        params.setVip(serverInfo.vipLevel);         //角色VIP等级
+        params.setPayNotifyUrl("http://cquc.5imengling.com/api/lydcb");//填写实际游戏服务器的支付回调地址
+        U8Platform.getInstance().pay(activity, params);
     }
 
     public static <T> T formJson(Class<T> tClass,JSONObject object) throws JSONException, InstantiationException, IllegalAccessException, InvocationTargetException {
@@ -689,34 +731,47 @@ public class QuickSdk{
 
 
     public static void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
-
+        U8SDK.getInstance().onActivityResult(requestCode,resultCode,data);
     }
 
     public static void onResume(Activity activity) {
+        U8SDK.getInstance().onResume();
     }
 
     public static void onStart(Activity activity) {
+        U8SDK.getInstance().onStart();
     }
 
     public static void onRestart(Activity activity) {
+        U8SDK.getInstance().onRestart();
     }
 
     public static void onPause(Activity activity) {
+        U8SDK.getInstance().onPause();
     }
 
     public static void onStop(Activity activity) {
+        U8SDK.getInstance().onStop();
     }
 
     public static void onDestroy(Activity activity) {
+        U8SDK.getInstance().onDestroy();
     }
 
     public static void onConfigurationChanged(Configuration config) {
-
+        U8SDK.getInstance().onConfigurationChanged(config);
     }
 
-    public static void onBackPress()
+    public static boolean onBackPress(Runnable back)
     {
-
+        if(U8SDK.getInstance().hasExitDialog() != 0){
+            //只用调用这一个方法就可以了 SDK方法内最后会调用System.exit(0)的
+            U8Platform.getInstance().exitSDK();
+        } else {
+            //游戏自己的退出确认框
+            back.run();
+        }
+        return true;
     }
 
     public static void requestExit() {
@@ -726,7 +781,7 @@ public class QuickSdk{
 
     public static void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
     {
-
+        U8SDK.getInstance().onRequestPermissionResult(requestCode,permissions,grantResults);
     }
 
     public static void activityAttachBaseContext(Context context)
@@ -735,7 +790,77 @@ public class QuickSdk{
     }
 
     public static void onCreate(Bundle savedInstanceState) {
+        U8Platform.getInstance().init(activity, new U8InitListener() {
+            @Override
+            public void onInitResult(int code, String s) {
+                switch(code){
+                    case U8Code.CODE_INIT_SUCCESS:
+                        notifGame(NOTIF_INIT,STATE_SUCCESS,toJsonObject(s));
+                        break;
+                    case U8Code.CODE_INIT_FAIL:
+                        notifGame(NOTIF_INIT,STATE_FAILED,toJsonObject(s));
+                        break;
+                }
+            }
 
+            @Override
+            public void onLoginResult(int code, UToken data) {
+                try {
+                    switch(code) {
+                        case U8Code.CODE_LOGIN_SUCCESS:
+                            JSONObject o = toJson(UToken.class, data);
+                            //Log.e("QFSDK","getUserID:"+data.getUserID()+"token:"+data.getToken());
+                            notifGame(NOTIF_LOGIN,STATE_SUCCESS,o);
+                            break;
+                        case U8Code.CODE_LOGIN_FAIL:
+                            notifGame(NOTIF_LOGIN,STATE_FAILED,new JSONObject());
+                            break;
+                    }
+                }
+                catch(Exception e) {
+                    Logw.e("onLoginResult " + e.getMessage());
+                }
+            }
+
+            @Override
+            public void onSwitchAccount(UToken data) {
+                JSONObject o = new JSONObject();
+                try {
+                    o = toJson(UToken.class, data);
+                } catch (Exception e) {
+                    Logw.e("onSwitchAccount " + e.getMessage());
+                }
+                notifGame(NOTIF_SwitchAccount,STATE_SUCCESS,o);
+            }
+
+            @Override
+            public void onLogout() {
+                notifGame(NOTIF_LOGOUT,STATE_SUCCESS,new JSONObject());
+            }
+
+            @Override
+            public void onPayResult(int code, String s) {
+                switch(code){
+                    case U8Code.CODE_PAY_SUCCESS:
+                        notifGame(NOTIF_PAY,STATE_SUCCESS,toJsonObject(s));
+                        break;
+                    case U8Code.CODE_PAY_FAIL:
+                        notifGame(NOTIF_PAY,STATE_FAILED,toJsonObject(s));
+                        break;
+                    case U8Code.CODE_PAY_CANCEL:
+                        notifGame(NOTIF_PAY,STATE_CANCEL,toJsonObject(s));
+                        break;
+                    case U8Code.CODE_PAY_UNKNOWN:
+                        notifGame(NOTIF_PAY,3,toJsonObject(s));
+                        break;
+                }
+            }
+
+            @Override
+            public void onProductQueryResult(List<ProductQueryResult> list) {
+
+            }
+        });
     }
 
     public static void onWindowFocusChanged(boolean hasFocus) {

@@ -574,7 +574,7 @@ public class MainActivity extends Activity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        QuickSdk.onBackPress();
+        //QuickSdk.onBackPress();
     }
 
     @Override
@@ -611,7 +611,14 @@ public class MainActivity extends Activity {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN)
         {
-            hook_back();
+            if(!QuickSdk.onBackPress(new Runnable() {
+                @Override
+                public void run() {
+                    hook_back();
+                }
+            })) {
+                hook_back();
+            }
             return  true;
         }
         return super.onKeyDown(keyCode,event);

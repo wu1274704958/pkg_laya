@@ -30,6 +30,10 @@ android {
         ndk {
             abiFilters "armeabi", "armeabi-v7a", "x86", "mips"
         }
+
+        packagingOptions {
+            exclude 'android-support-multidex.version.txt'
+        }
     }
     buildTypes {
         release {
@@ -63,6 +67,8 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
     compile files('libs/tbs_sdk.jar')
+    compile files('libs/QFSDK-1.33-release.jar')
+    compile files('libs/android-support-multidex.jar')
 
     implementation 'com.squareup.okhttp3:okhttp:4.8.0'
 }
