@@ -153,7 +153,8 @@ public class ExternCall {
                 Logw.e("CMD_QUICK_REG_NOTIF -----------------");
                 QuickSdk.NotifGameCmdId = id;
                 QuickSdk.init(activity,my_handler);
-                QuickSdk.notifGame(QuickSdk.NOTIF_INIT,QuickSdk.STATE_SUCCESS,new JSONObject());
+                QuickSdk.release_cache();
+                //QuickSdk.notifGame(QuickSdk.NOTIF_INIT,QuickSdk.STATE_SUCCESS,new JSONObject());
                 break;
             case CMD_QUICK_ACTION:
                 Logw.e("action " + body.toString());

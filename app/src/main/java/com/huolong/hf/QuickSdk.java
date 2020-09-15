@@ -40,6 +40,11 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Queue;
+import java.util.Stack;
+
+import static android.Manifest.permission.READ_PHONE_STATE;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 public class QuickSdk{
     private static final String TAG_HC = "HotCloud";
@@ -330,6 +335,23 @@ public class QuickSdk{
         }
     }
 
+    static class Data{
+        public int notif_id;
+        public int state_id;
+        public JSONObject obj;
+
+        public Data(int notif_id, int state_id, JSONObject obj) {
+            this.notif_id = notif_id;
+            this.state_id = state_id;
+            this.obj = obj;
+        }
+
+        void notif()
+        {
+            notifGame(notif_id,state_id,obj);
+        }
+    }
+    public static ArrayList<Data> cached_msg;
 
     public static void notifGame(int notif_id,int state_id,JSONObject obj)
     {
@@ -354,6 +376,8 @@ public class QuickSdk{
             m.what = ExternCall.WSendMessageToGame_Nodel;
             m.obj = jsonObject.toString();
             handler.sendMessage(m);
+        }else{
+            cached_msg.add(new Data(notif_id,state_id,obj));
         }
     }
 
@@ -394,12 +418,89 @@ public class QuickSdk{
 
     public static void init_(Activity activity)
     {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+        Logw.e("init ---------------- b");
+        U8Platform.getInstance().init(activity, new U8InitListener() {
+            @Override
+            public void onInitResult(int code, String s) {
+                Logw.e("init call back " + code + " " + s );
+                switch(code){
+                    case U8Code.CODE_INIT_SUCCESS:
+                        notifGame(NOTIF_INIT,STATE_SUCCESS,toJsonObject(s));
+                        break;
+                    case U8Code.CODE_INIT_FAIL:
+                        notifGame(NOTIF_INIT,STATE_FAILED,toJsonObject(s));
+                        break;
+                }
+            }
+
+            @Override
+            public void onLoginResult(int code, UToken data) {
+                try {
+                    switch(code) {
+                        case U8Code.CODE_LOGIN_SUCCESS:
+                            JSONObject o = toJson(UToken.class, data);
+                            //Log.e("QFSDK","getUserID:"+data.getUserID()+"token:"+data.getToken());
+                            notifGame(NOTIF_LOGIN,STATE_SUCCESS,o);
+                            break;
+                        case U8Code.CODE_LOGIN_FAIL:
+                            notifGame(NOTIF_LOGIN,STATE_FAILED,new JSONObject());
+                            break;
+                    }
+                }
+                catch(Exception e) {
+                    Logw.e("onLoginResult " + e.getMessage());
+                }
+            }
+
+            @Override
+            public void onSwitchAccount(UToken data) {
+                JSONObject o = new JSONObject();
+                try {
+                    o = toJson(UToken.class, data);
+                } catch (Exception e) {
+                    Logw.e("onSwitchAccount " + e.getMessage());
+                }
+                notifGame(NOTIF_SwitchAccount,STATE_SUCCESS,o);
+            }
+
+            @Override
+            public void onLogout() {
+                notifGame(NOTIF_LOGOUT,STATE_SUCCESS,new JSONObject());
+            }
+
+            @Override
+            public void onPayResult(int code, String s) {
+                switch(code){
+                    case U8Code.CODE_PAY_SUCCESS:
+                        notifGame(NOTIF_PAY,STATE_SUCCESS,toJsonObject(s));
+                        break;
+                    case U8Code.CODE_PAY_FAIL:
+                        notifGame(NOTIF_PAY,STATE_FAILED,toJsonObject(s));
+                        break;
+                    case U8Code.CODE_PAY_CANCEL:
+                        notifGame(NOTIF_PAY,STATE_CANCEL,toJsonObject(s));
+                        break;
+                    case U8Code.CODE_PAY_UNKNOWN:
+                        notifGame(NOTIF_PAY,3,toJsonObject(s));
+                        break;
+                }
+            }
+
+            @Override
+            public void onProductQueryResult(List<ProductQueryResult> list) {
+
+            }
+        });
+        Logw.e("init ---------------- e");
+    }
+
+    public static void release_cache()
+    {
+        for(Data d : cached_msg)
         {
-
-        }else {
-
+            d.notif();
         }
+        cached_msg.clear();
     }
 
     private static boolean RequestPermissionsSuccess = false;
@@ -697,7 +798,7 @@ public class QuickSdk{
         JSONObject oth = null;
         try{
             oth = arr.getJSONObject(idx);
-        }catch (JSONException e)
+        }catch (Exception e)
         {
             oth = new JSONObject();
         }
@@ -716,6 +817,7 @@ public class QuickSdk{
 
     static {
         CustomData = new HashMap<>();
+        cached_msg = new ArrayList<>();
     }
 
     public static void init(final Activity activity) {
@@ -781,6 +883,7 @@ public class QuickSdk{
 
     public static void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
     {
+        gameActivity_onRequestPermissionsResult(activity,requestCode,permissions,grantResults);
         U8SDK.getInstance().onRequestPermissionResult(requestCode,permissions,grantResults);
     }
 
@@ -789,78 +892,17 @@ public class QuickSdk{
 
     }
 
-    public static void onCreate(Bundle savedInstanceState) {
-        U8Platform.getInstance().init(activity, new U8InitListener() {
-            @Override
-            public void onInitResult(int code, String s) {
-                switch(code){
-                    case U8Code.CODE_INIT_SUCCESS:
-                        notifGame(NOTIF_INIT,STATE_SUCCESS,toJsonObject(s));
-                        break;
-                    case U8Code.CODE_INIT_FAIL:
-                        notifGame(NOTIF_INIT,STATE_FAILED,toJsonObject(s));
-                        break;
-                }
-            }
+    public static void onCreate(Bundle savedInstanceState,Activity activity) {
 
-            @Override
-            public void onLoginResult(int code, UToken data) {
-                try {
-                    switch(code) {
-                        case U8Code.CODE_LOGIN_SUCCESS:
-                            JSONObject o = toJson(UToken.class, data);
-                            //Log.e("QFSDK","getUserID:"+data.getUserID()+"token:"+data.getToken());
-                            notifGame(NOTIF_LOGIN,STATE_SUCCESS,o);
-                            break;
-                        case U8Code.CODE_LOGIN_FAIL:
-                            notifGame(NOTIF_LOGIN,STATE_FAILED,new JSONObject());
-                            break;
-                    }
-                }
-                catch(Exception e) {
-                    Logw.e("onLoginResult " + e.getMessage());
-                }
-            }
-
-            @Override
-            public void onSwitchAccount(UToken data) {
-                JSONObject o = new JSONObject();
-                try {
-                    o = toJson(UToken.class, data);
-                } catch (Exception e) {
-                    Logw.e("onSwitchAccount " + e.getMessage());
-                }
-                notifGame(NOTIF_SwitchAccount,STATE_SUCCESS,o);
-            }
-
-            @Override
-            public void onLogout() {
-                notifGame(NOTIF_LOGOUT,STATE_SUCCESS,new JSONObject());
-            }
-
-            @Override
-            public void onPayResult(int code, String s) {
-                switch(code){
-                    case U8Code.CODE_PAY_SUCCESS:
-                        notifGame(NOTIF_PAY,STATE_SUCCESS,toJsonObject(s));
-                        break;
-                    case U8Code.CODE_PAY_FAIL:
-                        notifGame(NOTIF_PAY,STATE_FAILED,toJsonObject(s));
-                        break;
-                    case U8Code.CODE_PAY_CANCEL:
-                        notifGame(NOTIF_PAY,STATE_CANCEL,toJsonObject(s));
-                        break;
-                    case U8Code.CODE_PAY_UNKNOWN:
-                        notifGame(NOTIF_PAY,3,toJsonObject(s));
-                        break;
-                }
-            }
-
-            @Override
-            public void onProductQueryResult(List<ProductQueryResult> list) {
-
-            }
-        });
+        QuickSdk.activity = activity;
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+        {
+            ActivityCompat.requestPermissions(activity,new String[]{
+                    READ_PHONE_STATE,WRITE_EXTERNAL_STORAGE
+            },1);
+        }else {
+            init_(activity);
+        }
     }
 
     public static void onWindowFocusChanged(boolean hasFocus) {
