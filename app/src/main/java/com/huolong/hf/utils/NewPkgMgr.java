@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Build.VERSION_CODES;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.LinearLayout;
@@ -15,6 +17,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.UiThread;
 import androidx.core.content.FileProvider;
@@ -101,6 +104,41 @@ public class NewPkgMgr {
         if(!root.exists())
             root.mkdirs();
     }
+    private Handler handler = new Handler( new Handler.Callback(){
+        @Override
+        public boolean handleMessage(@NonNull Message msg) {
+            switch (msg.what)
+            {
+                case 0:
+                    if(msg.arg1 == 1) {
+                    temp_dialog.dismiss();
+                        on_downloaded(msg.arg1 == 1);
+                    }else {
+                        on_downloaded(false);
+                    }
+                    break;
+                case 1:
+                    dialog_progress.setProgress(msg.arg1);
+                    break;
+                case 2:
+                    temp_dialog.dismiss();
+                    Toast.makeText(context,"下载失败,自动重试!",Toast.LENGTH_SHORT).show();
+                    Runnable r = (Runnable) msg.obj;
+                    if(r != null) r.run();
+                    break;
+                case 3:
+                    progress_tv.setText(msg.obj != null ? msg.obj.toString():"");
+                    break;
+                case 4:
+
+                    break;
+                default:
+
+                    break;
+            }
+            return true;
+        }
+    });;
 
     public void load_config()
     {
@@ -218,29 +256,20 @@ public class NewPkgMgr {
             public void onDownloadSuccess(File file, String name) {
                 save_ver(ver);
 
-                ((Activity)context).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(is_force) {
-                            temp_dialog.dismiss();
-                            on_downloaded(is_force);
-                        }else {
-                            on_downloaded(is_force);
-                        }
-                    }
-                });
+                Message m = new Message();
+                m.what = 0;
+                m.arg1 = is_force ? 1 : 0;
+                handler.sendMessage(m);
             }
 
             @Override
             public void onDownloading(final int progress, String name) {
                 if(is_force && dialog_progress != null)
                 {
-                    ((Activity)context).runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            dialog_progress.setProgress(progress);
-                        }
-                    });
+                    Message m = new Message();
+                    m.arg1 = progress;
+                    m.what = 1;
+                    handler.sendMessage(m);
                 }
                 Log.e(TAG,"onDownloading " + progress);
             }
@@ -249,14 +278,15 @@ public class NewPkgMgr {
             public void onDownloadFailed(Exception e, String name) {
                 if(is_force)
                 {
-                    ((Activity)context).runOnUiThread(new Runnable() {
+                    Message m = new Message();
+                    m.what = 2;
+                    m.obj = new Runnable() {
                         @Override
                         public void run() {
-                            temp_dialog.dismiss();
-                            Toast.makeText(context,"下载失败,自动重试!",Toast.LENGTH_SHORT).show();
                             download(is_force,url,ver);
                         }
-                    });
+                    };
+                    handler.sendMessage(m);
                 }else
                     state = ST_FREE;
                 Log.e(TAG,"download failed " + e.getMessage() + " " + name);
@@ -266,7 +296,12 @@ public class NewPkgMgr {
             @Override
             public void onProgress(long curr, long max, int progress, String name) {
                 if(is_force && progress_tv != null)
-                    progress_tv.setText(String.format("%sMB/%sMB", curr / 1048576,max / 1048576));
+                {
+                    Message m = new Message();
+                    m.obj = String.format("%sMB/%sMB", curr / 1048576,max / 1048576);
+                    m.what = 3;
+                    handler.sendMessage(m);
+                }
             }
         };
         Log.e(TAG,"is_force " + is_force);
