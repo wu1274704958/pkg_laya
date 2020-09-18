@@ -233,18 +233,6 @@ public class ExternCall {
             sendMessageToGame_Nodel(callbacks, reg_resume_cmdid, o.toString());
         }
 
-
-        if(System.currentTimeMillis() - pause_time_point > 1000 * 60 * 60)
-        {
-            web.getLoader().loadUrl(((MainActivity)activity).getGoUrl());
-        }else{
-            my_handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if(!GameAlive) web.getLoader().loadUrl(((MainActivity)activity).getGoUrl());
-                }
-            },500);
-        }
     }
     public void onPause()
     {

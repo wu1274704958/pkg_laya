@@ -29,6 +29,9 @@ android {
 
         ndk { abiFilters  'armeabi-v7a','x86','arm64-v8a','x86_64','armeabi' }
     }
+    sourceSets.main{
+        jniLibs.srcDir 'libs'
+    }
     packagingOptions {
         doNotStrip "*/armeabi-v7a/*.so"
         doNotStrip "*/x86/*.so"
@@ -82,6 +85,8 @@ dependencies {
     compile files('libs/tbs_sdk.jar')
     compile files('libs/tracking1.6.6.jar')
     compile files('libs/bcprov-jdk16-139.jar')
+
+    compile files('libs/layaconch.jar')
 
     implementation 'com.squareup.okhttp3:okhttp:4.8.0'
 }

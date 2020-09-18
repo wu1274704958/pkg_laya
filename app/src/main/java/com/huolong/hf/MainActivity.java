@@ -2,15 +2,11 @@ package com.huolong.hf;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.widget.ContentLoadingProgressBar;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
-import android.app.AlarmManager;
 import android.app.AlertDialog;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,21 +14,14 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.ColorDrawable;
-import android.inputmethodservice.Keyboard;
-import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Debug;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
-import android.os.PersistableBundle;
 import android.os.Process;
 import android.util.Log;
-import android.util.SparseArray;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -40,35 +29,30 @@ import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
-import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.huolong.hf.utils.NewPkgMgr;
 import com.huolong.hf.utils.RestartAPPTool;
 import com.huolong.hf.utils.Utils;
 import com.just.agentwebX5.AgentWebX5;
 import com.plug.wv.FullScreenDialog;
-import com.tencent.smtt.export.external.interfaces.ConsoleMessage;
-import com.tencent.smtt.export.external.interfaces.JsResult;
-import com.tencent.smtt.export.external.interfaces.WebResourceRequest;
-import com.tencent.smtt.export.external.interfaces.WebResourceResponse;
 import com.tencent.smtt.sdk.QbSdk;
-import com.tencent.smtt.sdk.WebChromeClient;
-import com.tencent.smtt.sdk.WebSettings;
-import com.tencent.smtt.sdk.WebView;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.util.Stack;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 
+import layaair.game.IMarket.IPlugin;
+import layaair.game.IMarket.IPluginRuntimeProxy;
+import layaair.game.Market.GameEngine;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -76,8 +60,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okio.BufferedSink;
-import one.huolong.online.BuildConfig;
 import one.huolong.online.R;
 
 import static android.webkit.WebSettings.LOAD_CACHE_ELSE_NETWORK;
@@ -120,12 +102,11 @@ public class MainActivity extends Activity {
     //private String url = "http://10.10.6.67:8900/bin/index.html";
     FrameLayout root;
     public static String TAG = "WV";
-    private Boolean has_splash = true;
+    private Boolean has_splash = false;
     private boolean has_memory_info = false;
     private boolean auto_hide_splash = false;
     ExternCall externCall;
     private View splash_view;
-    private LocalCacheMgr cacheMgr;
     private ContentLoadingProgressBar pb;
     private Animation scale;
     private AlertDialog exit_dialog;
@@ -135,7 +116,10 @@ public class MainActivity extends Activity {
     private long loding_time = 0;
     private boolean software = false;
     private TextView tv_ver;
-    FullScreenDialog.OnWVCb cb = new FullScreenDialog.OnWVCb() {
+    private IPlugin mPlugin = null;
+    private IPluginRuntimeProxy mProxy = null;
+    boolean isLoad=false;
+    public FullScreenDialog.OnWVCb cb = new FullScreenDialog.OnWVCb() {
         @Override
         public void onDismiss() {
 
@@ -155,6 +139,11 @@ public class MainActivity extends Activity {
                 boolean is_destroy = o.getBoolean("is_destroy");
                 int id = o.getInt("id");
                 JSONObject body = o.getJSONObject("body");
+                if(cmd == 0)
+                {
+                    Toast.makeText(MainActivity.this,"测试 JSBridge!!!",Toast.LENGTH_LONG).show();
+                    return;
+                }
                 if(cmd == 9 && !auto_hide_splash)
                 {
                     hide_splash();
@@ -188,7 +177,7 @@ public class MainActivity extends Activity {
             getWindow().setAttributes(lp);
         }
         //设置一个布局
-
+        JSBridge.mMainActivity = new WeakReference<MainActivity>(this);
         setContentView(  R.layout.activity_framelayout);
         if(!software)
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
@@ -207,7 +196,7 @@ public class MainActivity extends Activity {
 
         scale = AnimationUtils.loadAnimation(this,R.anim.up);
 
-        cacheMgr = new LocalCacheMgr(url,this);
+
         setHideVirtualKey(getWindow());
 
         root = findViewById(R.id.root);
@@ -225,18 +214,16 @@ public class MainActivity extends Activity {
 
     private void go()
     {
-        mAgentWeb = AgentWebX5.with(this)//传入Activity
-                .setAgentWebParent(root, root.getLayoutParams())//传入AgentWeb 的父控件 ，如果父控件为 RelativeLayout ， 那么第二参数需要传入 RelativeLayout.LayoutParams
-                .useDefaultIndicator()
-                .defaultProgressBarColor()
-                .setWebChromeClient(mWebChromeClient)
-                .setWebViewClient(mWebViewClient)
-                .createAgentWeb()//
-                .go(url);
-        mAgentWeb.getWebSettings().getWebSettings().setUserAgentString("Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1");
-        mAgentWeb.getWebSettings().getWebSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
-        if(!software)mAgentWeb.getWebSettings().getWebSettings().setRenderPriority(com.tencent.smtt.sdk.WebSettings.RenderPriority.HIGH);
+        mProxy = new RuntimeProxy(this);
+        mPlugin = new GameEngine(this);
+        mPlugin.game_plugin_set_runtime_proxy(mProxy);
+        mPlugin.game_plugin_set_option("localize","false");
+        mPlugin.game_plugin_set_option("gameUrl", "http://10.10.6.67:8900/bin/index.js");
+        mPlugin.game_plugin_init(3);
+        View gameView = mPlugin.game_plugin_get_view();
+        isLoad=true;
 
+        root.addView(gameView,new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
         if(has_splash) {
             is_hide_splash = false;
@@ -258,15 +245,8 @@ public class MainActivity extends Activity {
             launch_update_mem();
         }
 
-        //if( !QbSdk.canLoadX5(this))
-        //{
-        //    pop_install_x5_dialog();
-        //}
-
         Log.e(TAG,"root "+ root.getChildCount() + (root.getChildAt(0) instanceof ImageView));
 
-
-        mAgentWeb.getJsInterfaceHolder().addJavaObject("native_call", new JsCallAndroidInterface(mAgentWeb, this,cb));
         externCall = new ExternCall(mAgentWeb,this);
     }
 
@@ -332,88 +312,6 @@ public class MainActivity extends Activity {
         }
 
     }
-
-    private com.tencent.smtt.sdk.WebChromeClient mWebChromeClient=new com.tencent.smtt.sdk.WebChromeClient(){
-        @Override
-        public void onProgressChanged(WebView view, int newProgress) {
-
-            cb.onProcess(newProgress);
-            if (newProgress==100){
-                view.setBackgroundColor(Color.WHITE);
-                //mAgentWeb.getIndicatorController().offerIndicator();
-                if(splash_view != null && auto_hide_splash) {
-                   // root.removeView(splash_view);
-                    hide_splash();
-                } //root.invalidate();
-
-            }else {
-                view.setBackgroundColor(Color.BLACK);
-            }
-
-        }
-
-        @Override
-        public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN){
-                view.getSettings().setAllowUniversalAccessFromFileURLs(true);
-                view.getSettings().setAllowFileAccessFromFileURLs(true);
-            }else{
-                try {
-                    Class<?> clazz = view.getSettings().getClass();
-                    Method method = clazz.getMethod("setAllowUniversalAccessFromFileURLs", boolean.class);
-                    if (method != null) {
-                        method.invoke(view.getSettings(), true);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            if(!software)
-                view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-            else
-                view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-            view.getSettings().setAppCacheEnabled(true);
-            return true;
-        }
-
-        @Override
-        public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-            if(consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.TIP)
-            {
-                Log.v("WVCM",consoleMessage.message()+ " " + consoleMessage.sourceId() + "   " +  consoleMessage.lineNumber());
-            }else
-            if(consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.DEBUG)
-            {
-                Log.d("WVCM",consoleMessage.message()+ " " + consoleMessage.sourceId() + "   " +  consoleMessage.lineNumber());
-            }else
-            if(consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.LOG)
-            {
-                Log.i("WVCM",consoleMessage.message()+ " " + consoleMessage.sourceId() + "   " +  consoleMessage.lineNumber());
-            }else
-            if(consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.WARNING)
-            {
-                Log.w("WVCM",consoleMessage.message()+ " " + consoleMessage.sourceId() + "   " +  consoleMessage.lineNumber());
-            }else
-            if(consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.ERROR)
-            {
-                String s = consoleMessage.message() + " " + consoleMessage.sourceId() +  " " +  consoleMessage.lineNumber();
-                upload_err_msg(s);
-
-                if(!is_hide_splash)
-                {
-                    pop_error_dialog("游戏加载错误!");
-                }
-                Log.e("WVCM",s);
-            }
-            return true;
-        }
-
-        @Override
-        public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
-            Log.e(TAG,"=======  " +  url );
-            return false;
-        }
-    };
 
     private void upload_err_msg(String s) {
         StringBuffer model = new StringBuffer( Build.MODEL);
@@ -495,16 +393,6 @@ public class MainActivity extends Activity {
         err_dialog.show();
     }
 
-    private com.tencent.smtt.sdk.WebViewClient mWebViewClient = new com.tencent.smtt.sdk.WebViewClient()
-    {
-        @Override
-        public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                return cacheMgr.shouldInterceptRequest(view,request);
-            }
-            return null;
-        }
-    };
 
     public void setHideVirtualKey(Window window){
         //保持布局状态
@@ -538,8 +426,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        if(mAgentWeb != null)
-            mAgentWeb.getWebLifeCycle().onResume();
+        if(isLoad)mPlugin.game_plugin_onResume();
         QuickSdk.onResume(this);
         externCall.onResume();
         run_on_resume_task();
@@ -548,8 +435,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        if(mAgentWeb != null)
-            mAgentWeb.getWebLifeCycle().onPause();
+        if(isLoad)mPlugin.game_plugin_onPause();
         QuickSdk.onPause(this);
         externCall.onPause();
     }
@@ -557,8 +443,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(mAgentWeb != null)
-            mAgentWeb.getWebLifeCycle().onDestroy();
+        if(isLoad)mPlugin.game_plugin_onDestory();
         QuickSdk.onDestroy(this);
     }
 
@@ -601,6 +486,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onStop() {
         super.onStop();
+        if(isLoad)mPlugin.game_plugin_onStop();
         QuickSdk.onStop(this);
     }
 
