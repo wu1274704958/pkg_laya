@@ -24,6 +24,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -34,6 +35,25 @@ import okhttp3.Response;
 
 public class LocalCacheMgr {
 
+    private static class RFile{
+        String name;
+        String suffix;
+
+        public RFile(String name, String suffix) {
+            this.name = name;
+            this.suffix = suffix;
+        }
+
+        @Override
+        public int hashCode() {
+            return toString().hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s.%s",name,suffix);
+        }
+    }
     private static class State{
         int st = ST_NULL;
         long len = 0;
@@ -65,6 +85,7 @@ public class LocalCacheMgr {
     private Activity activity;
     private String localDir;
     private HashMap<String,State> st_map;
+    private HashSet<String> ignore_set;
     public static final Integer ST_WAIT = 0;
     public static final Integer ST_IN_PROGRESS = 100;
     public static final Integer ST_SUCCESS = 2;
@@ -84,6 +105,13 @@ public class LocalCacheMgr {
         localDir = activity.getFilesDir().getAbsolutePath();
         st_map = new HashMap<>();
         Log.e(TAG,head);
+        fill_ignore();
+    }
+
+    public void fill_ignore()
+    {
+        ignore_set = new HashSet<>();
+        ignore_set.add("assets/config/config.txt");
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -95,7 +123,7 @@ public class LocalCacheMgr {
         if(url.startsWith(head))
         {
             String sub = url.substring(head.length());
-
+            sub = filter_path(sub);
             //Log.e(TAG,sub);
             InputStream is = open(sub);
             if(is != null)
@@ -139,6 +167,29 @@ public class LocalCacheMgr {
         }
 
         return null;
+    }
+
+    private String filter_path(String sub) {
+        int e = sub.lastIndexOf('.');
+        if(e > 0)
+        {
+            String suf = null,bs = null;
+            try {
+                suf = sub.substring(e+1);
+                bs = sub.substring(0,e - 11);
+            }catch (Exception exx) { }
+            if(bs != null && suf != null)
+            {
+                //Log.e(TAG,bs+"."+suf);
+                String rf = new RFile(bs,suf).toString();
+                if(ignore_set.contains(rf))
+                {
+                    Log.e(TAG,"need ignore " + rf);
+                    return rf;
+                }
+            }
+        }
+        return sub;
     }
 
     public OnDownloadListener downloadListener = new OnDownloadListener() {

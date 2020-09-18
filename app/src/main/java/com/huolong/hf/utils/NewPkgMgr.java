@@ -95,7 +95,7 @@ public class NewPkgMgr {
     public static final int ST_Install = 3;
     private int state = ST_FREE;
     private Info cached;
-    private static final int Pid = 1300;
+    private static final int Pid = 1315;
     public NewPkgMgr(Context context)
     {
         this.context = context;
