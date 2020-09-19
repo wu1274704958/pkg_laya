@@ -6,9 +6,12 @@ import android.os.Handler;
 import android.os.Looper;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 
+import layaair.game.browser.ConchJNI;
+import layaair.game.conch.LayaConch5;
 
 public class JSBridge {
     public static Handler m_Handler = new Handler(Looper.getMainLooper());
@@ -55,4 +58,10 @@ public class JSBridge {
         });
 
     }
+
+    public static void call(JSONObject data) {
+        String str = String.format("android_call(%s)",data.toString());
+        ConchJNI.RunJS(str);
+    }
+
 }

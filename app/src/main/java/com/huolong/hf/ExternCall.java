@@ -1,6 +1,5 @@
 package com.huolong.hf;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
@@ -10,6 +9,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.util.SparseArray;
+import android.util.SparseBooleanArray;
 import android.webkit.ValueCallback;
 import android.widget.Toast;
 
@@ -34,6 +34,7 @@ public class ExternCall {
     private static final String TAG = "ExternCall";
     AgentWebX5 web;
     SparseArray<ValueCallback<JSONObject>> callbacks;
+    SparseBooleanArray destroy_map;
     Activity activity;
     public static final int WSendMessageToGame = 1;
     public static final int WSendMessageToGame_Nodel = 2;
@@ -66,6 +67,7 @@ public class ExternCall {
         this.web = web;
         this.activity = activity;
         this.callbacks = new SparseArray<ValueCallback<JSONObject>>();
+        destroy_map = new SparseBooleanArray();
     }
 
     static class MyCB implements ValueCallback<JSONObject> {
@@ -79,7 +81,8 @@ public class ExternCall {
         public void onReceiveValue(JSONObject jsonObject) {
             try {
                 Log.e(TAG,"onReceiveValue" + jsonObject.toString());
-                web.getJsEntraceAccess().quickCallJs("extern_back", jsonObject.toString());
+                //web.getJsEntraceAccess().quickCallJs("extern_back", jsonObject.toString());
+                JSBridge.call(jsonObject);
             } catch (Exception e) {
                 Log.e(TAG,e.getMessage());
             }
@@ -99,7 +102,7 @@ public class ExternCall {
                 Log.e(TAG,e.getMessage());
             }
             callback.onReceiveValue(data);
-            callbacks.remove(cmdid);
+            rm(cmdid);
         }
     }
 
@@ -116,6 +119,8 @@ public class ExternCall {
                 Log.e(TAG,e.getMessage());
             }
             callback.onReceiveValue(data);
+            if(destroy_map.get(cmdid,false))
+                rm(cmdid);
         }
     }
 
@@ -123,7 +128,7 @@ public class ExternCall {
 
     public void call(int cmd,int id,JSONObject body,boolean is_destroy) throws JSONException {
         MyCB cb = new MyCB(web);
-        add(id,cb);
+        add(id,cb,is_destroy);
 
         switch (cmd)
         {
@@ -208,13 +213,17 @@ public class ExternCall {
     }
 
 
-    private void add(int id,MyCB cb) {
+    private void add(int id,MyCB cb,boolean is_destroy) {
         if(callbacks.get(id) == null)
             callbacks.put(id,cb);
+        if(destroy_map.get(id,true))
+            destroy_map.put(id,is_destroy);
     }
     private void rm(int id) {
         if(callbacks.get(id) != null)
             callbacks.remove(id);
+        if(destroy_map.indexOfKey(id) != -1)
+            destroy_map.delete(id);
     }
 
     private int reg_resume_cmdid = -1;

@@ -102,7 +102,7 @@ public class MainActivity extends Activity {
     //private String url = "http://10.10.6.67:8900/bin/index.html";
     FrameLayout root;
     public static String TAG = "WV";
-    private Boolean has_splash = false;
+    private Boolean has_splash = true;
     private boolean has_memory_info = false;
     private boolean auto_hide_splash = false;
     ExternCall externCall;
@@ -141,7 +141,8 @@ public class MainActivity extends Activity {
                 JSONObject body = o.getJSONObject("body");
                 if(cmd == 0)
                 {
-                    Toast.makeText(MainActivity.this,"测试 JSBridge!!!",Toast.LENGTH_LONG).show();
+                    //Toast.makeText(MainActivity.this,"测试 JSBridge!!!",Toast.LENGTH_LONG).show();
+                    Logw.e("测试 JSBridge!!!");
                     return;
                 }
                 if(cmd == 9 && !auto_hide_splash)
