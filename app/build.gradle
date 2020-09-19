@@ -84,4 +84,6 @@ dependencies {
     compile files('libs/bcprov-jdk16-139.jar')
 
     implementation 'com.squareup.okhttp3:okhttp:4.8.0'
+
+    api project(':xipusdklibrary')
 }
