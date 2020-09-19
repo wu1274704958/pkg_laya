@@ -59,6 +59,7 @@ import com.tencent.smtt.sdk.QbSdk;
 import com.tencent.smtt.sdk.WebChromeClient;
 import com.tencent.smtt.sdk.WebSettings;
 import com.tencent.smtt.sdk.WebView;
+import com.xipu.hlzg.R;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -77,8 +78,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okio.BufferedSink;
-import one.huolong.online.BuildConfig;
-import one.huolong.online.R;
 
 import static android.webkit.WebSettings.LOAD_CACHE_ELSE_NETWORK;
 
@@ -175,7 +174,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        QuickSdk.onCreate(savedInstanceState);
+        QuickSdk.onCreate(savedInstanceState,this);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);// 设置全屏
@@ -583,7 +582,7 @@ public class MainActivity extends Activity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        QuickSdk.onBackPress();
+        //QuickSdk.onBackPress();
     }
 
     @Override
@@ -620,7 +619,14 @@ public class MainActivity extends Activity {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN)
         {
-            hook_back();
+            if(!QuickSdk.onBackPress(new Runnable() {
+                @Override
+                public void run() {
+                    hook_back();
+                }
+            })) {
+                hook_back();
+            }
             return  true;
         }
         return super.onKeyDown(keyCode,event);

@@ -22,12 +22,12 @@ import com.just.agentwebX5.AgentWebX5;
 import com.plug.oaid.Oaid;
 import com.plug.reg.Reg;
 import com.plug.wv.WebView;
+import com.xipu.hlzg.R;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import one.huolong.online.R;
 
 
 public class ExternCall {
@@ -154,6 +154,7 @@ public class ExternCall {
                 Logw.e("CMD_QUICK_REG_NOTIF -----------------");
                 QuickSdk.NotifGameCmdId = id;
                 QuickSdk.init(activity,my_handler);
+                QuickSdk.release_cache();
                 QuickSdk.notifGame(QuickSdk.NOTIF_INIT,QuickSdk.STATE_SUCCESS,new JSONObject());
                 break;
             case CMD_QUICK_ACTION:

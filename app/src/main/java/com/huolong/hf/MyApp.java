@@ -5,10 +5,11 @@ import android.util.Log;
 
 import com.tencent.smtt.export.external.TbsCoreSettings;
 import com.tencent.smtt.sdk.QbSdk;
+import com.xipu.msdk.XiPuSDKApplication;
 
 import java.util.HashMap;
 
-public class MyApp extends Application {
+public class MyApp extends XiPuSDKApplication {
 
     @Override
     public void onCreate() {

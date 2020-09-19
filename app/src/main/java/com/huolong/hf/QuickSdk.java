@@ -22,13 +22,11 @@ import android.content.Context;
 
 import androidx.core.app.ActivityCompat;
 
-import com.bytedance.applog.AppLog;
-import com.bytedance.applog.GameReportHelper;
-import com.bytedance.applog.InitConfig;
-import com.bytedance.applog.util.UriConfig;
-import com.plug.oaid.DeviceIdUtils;
-import com.plug.oaid.Oaid;
-import com.reyun.tracking.sdk.Tracking;
+
+import com.startobj.util.string.SOStringUtil;
+import com.xipu.msdk.XiPuSDK;
+import com.xipu.msdk.callback.XiPuSDKCallback;
+import com.xipu.msdk.model.RoleModel;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,6 +37,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import static android.Manifest.permission.READ_PHONE_STATE;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 public class QuickSdk{
     private static final String TAG_HC = "HotCloud";
@@ -329,6 +330,23 @@ public class QuickSdk{
         }
     }
 
+    static class Data{
+        public int notif_id;
+        public int state_id;
+        public JSONObject obj;
+
+        public Data(int notif_id, int state_id, JSONObject obj) {
+            this.notif_id = notif_id;
+            this.state_id = state_id;
+            this.obj = obj;
+        }
+
+        void notif()
+        {
+            notifGame(notif_id,state_id,obj);
+        }
+    }
+    public static ArrayList<Data> cached_msg;
 
     public static void notifGame(int notif_id,int state_id,JSONObject obj)
     {
@@ -353,6 +371,8 @@ public class QuickSdk{
             m.what = ExternCall.WSendMessageToGame_Nodel;
             m.obj = jsonObject.toString();
             handler.sendMessage(m);
+        }else{
+            cached_msg.add(new Data(notif_id,state_id,obj));
         }
     }
 
@@ -388,37 +408,25 @@ public class QuickSdk{
 
     public static void gameActivity_onNewIntent(Activity activity,Intent intent)
     {
-
+        XiPuSDK.getInstance().onNewIntent(intent);
     }
 
-    public static void init_(Activity activity_)
-    {
-        Log.e("QuickSdk","init_");
+    public static void init_(Activity activity_) {
+        Log.e("QuickSdk", "init_");
         try {
-            final InitConfig config = new InitConfig("182083", "huolong03");
-            config.setUriConfig(UriConfig.DEFAULT);
-            config.setEnablePlay(true);
 
-            AppLog.setEnableLog(true);
+        } catch (Exception e) {
 
-            AppLog.init(activity_, config);
-            /* 初始化结束 */
-
-            // ⾃定义 “⽤⼾公共属性”（可选，初始化后调⽤, key相同会覆盖）
-            HashMap<String, Object> headerMap = new HashMap<String, Object>();
-            headerMap.put("level",8);
-            headerMap.put("gender","female");
-            AppLog.setHeaderInfo(headerMap);
-
-            AppLog.setUserUniqueID(DeviceIdUtils.getDeviceId(activity_));
-            Log.e(TAG_HC,"init b");
-            Tracking.setDebugMode(true);
-            Tracking.initWithKeyAndChannelId(activity_.getApplication(),"f554949c3966bb1924195b8548896ea4","_default_");
-            Log.e(TAG_HC,"init e");
-        }catch (Exception e)
-        {
-            Logw.e("init err = " + e.toString());
         }
+    }
+
+    public static void release_cache()
+    {
+        for(Data d : cached_msg)
+        {
+            d.notif();
+        }
+        cached_msg.clear();
     }
 
     private static boolean RequestPermissionsSuccess = false;
@@ -489,13 +497,6 @@ public class QuickSdk{
     {
         try {
             switch (func) {
-                case FUNC_REGISTER:
-                {
-                    User u = objForIdx(User.class,args,1);
-                    register(activity,args.getString(0),u);
-                    login(activity,u);
-                    break;
-                }
                 case FUNC_LOGIN: {
                     User u = objForIdx(User.class,args,0);
                     login(activity,u);
@@ -525,21 +526,23 @@ public class QuickSdk{
                     break;
                 }
                 case FUNC_PAY:{
+                    JSONObject oth = null;
+                    try{
+                        oth = args.getJSONObject(2);
+                    }catch (JSONException e)
+                    {
+                        oth = new JSONObject();
+                    }
+                    Logw.e("oth = " + oth.toString());
+
+                    SetGameRoleInfoEx exinfo = formJson(SetGameRoleInfoEx.class,oth);
                     pay(activity,
                             formJson(Order.class,args.getJSONObject(0)),
-                            formJson(ServerInfo.class,args.getJSONObject(1)),
-                            args.getJSONObject(2));
+                            formJson(ServerInfo.class,args.getJSONObject(1)),exinfo);
                     break;
                 }
                 case FUNC_BACK_PRESSED:{
-                    onBackPress();
-                    break;
-                }
-                case FUNC_GenerateOrder:{
-                    onGenerateOrder(activity,
-                            formJson(Order.class,args.getJSONObject(0)),
-                            formJson(ServerInfo.class,args.getJSONObject(1)),
-                            args.getJSONObject(2));
+                    //onBackPress();
                     break;
                 }
             }
@@ -549,35 +552,40 @@ public class QuickSdk{
         }
     }
 
-    private static void register(Activity activity, String string,User u) {
-        GameReportHelper.onEventRegister(string,true);
-        Log.e(TAG_HC,"register " + u.acc);
-        Tracking.setRegisterWithAccountID(u.acc);
-    }
-
     public static void login(Activity activity,User u)
     {
         Logw.e("login b");
-        GameReportHelper.onEventLogin("",true);
+        XiPuSDK.getInstance().login(activity);
         Logw.e("login e");
         Log.e(TAG_HC,"login " + u.acc);
-        Tracking.setLoginSuccessBusiness(u.acc);
     }
 
     public static void setGameRoleInfo(Activity activity,RoleInfo info,Boolean is_create,SetGameRoleInfoEx oths)
     {
         Logw.e("setGameRoleInfo exec");
 
+        RoleModel mRoleEntity = new RoleModel();
+        mRoleEntity.setViplevel(info.vipLevel);
+        mRoleEntity.setRoleid(info.gameRoleID);
+        mRoleEntity.setRolelevel(info.gameRoleLevel);
+        mRoleEntity.setRolename(info.gameRoleName);
+        mRoleEntity.setServerid(info.serverName);
+        mRoleEntity.setServername(oths.getServerName());
+        mRoleEntity.setRemainder("0");
         if(is_create) {
-            GameReportHelper.onEventCreateGameRole(info.gameRoleID);
+            XiPuSDK.getInstance().createRole(activity,mRoleEntity);
         }else{
-            GameReportHelper.onEventUpdateLevel(Integer.parseInt(info.gameRoleLevel));
+            if(oths.is_enter) {
+                XiPuSDK.getInstance().loginRole(activity,mRoleEntity);
+            }else{
+                XiPuSDK.getInstance().upgradeRole(activity,mRoleEntity);
+            }
         }
     }
 
     public static void logout(Activity activity)
     {
-
+        XiPuSDK.getInstance().logout();
     }
 
     public static void exit(Activity activity)
@@ -585,17 +593,24 @@ public class QuickSdk{
 
     }
 
-    public static void pay(Activity activity,final Order order, ServerInfo serverInfo,JSONObject oths) throws JSONException {
+    public static void pay(Activity activity,final Order order, ServerInfo serverInfo,SetGameRoleInfoEx oths) throws JSONException {
         Logw.e("pay exec");
 
-        GameReportHelper.onEventPurchase("gift",order.goodsName,order.goodsID,
-                Integer.valueOf(order.count),oths.getString("channel"),"¥",true,Integer.valueOf(order.amount));
+
         float amount = 0.f;
         try {
             amount = Float.parseFloat(order.amount);
         }catch (Exception e){}
-        Log.e(TAG_HC,"pay " + order.cpOrderID + " " + oths.getString("channel")  + "CNY" + amount);
-        Tracking.setPayment(order.cpOrderID,oths.getString("channel"),"CNY",amount );
+
+        RoleModel mRoleEntity = new RoleModel();
+        mRoleEntity.setViplevel(serverInfo.vipLevel);
+        mRoleEntity.setRoleid(serverInfo.gameRoleID);
+        mRoleEntity.setRolelevel(serverInfo.gameRoleLevel);
+        mRoleEntity.setRolename(serverInfo.gameRoleName);
+        mRoleEntity.setServerid(serverInfo.serverID);
+        mRoleEntity.setServername(serverInfo.serverName);
+        mRoleEntity.setRemainder("0");
+        XiPuSDK.getInstance().pay(activity, mRoleEntity, (int)(amount * 100.f), order.cpOrderID);
     }
 
     public static void onGenerateOrder(Activity activity,final Order order, ServerInfo serverInfo,JSONObject oths) throws JSONException {
@@ -603,8 +618,7 @@ public class QuickSdk{
         try {
             amount = Float.parseFloat(order.amount);
         }catch (Exception e){}
-        Log.e(TAG_HC,"onGenerateOrder " + order.cpOrderID +  "CNY" + amount);
-        Tracking.setOrder(order.cpOrderID,"CNY" , amount);
+
     }
 
     public static <T> T formJson(Class<T> tClass,JSONObject object) throws JSONException, InstantiationException, IllegalAccessException, InvocationTargetException {
@@ -720,7 +734,7 @@ public class QuickSdk{
         JSONObject oth = null;
         try{
             oth = arr.getJSONObject(idx);
-        }catch (JSONException e)
+        }catch (Exception e)
         {
             oth = new JSONObject();
         }
@@ -739,12 +753,13 @@ public class QuickSdk{
 
     static {
         CustomData = new HashMap<>();
+        cached_msg = new ArrayList<>();
     }
 
     public static void init(final Activity activity_) {
         activity = activity_;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            activity_.requestPermissions(new String[]{Manifest.permission.READ_PHONE_STATE},1);
+            activity_.requestPermissions(new String[]{READ_PHONE_STATE},1);
         }else{
             init_(activity_);
         }
@@ -755,56 +770,47 @@ public class QuickSdk{
     public static long in_time = 0;
     public static long out_time = 0;
     public static void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
-
+        XiPuSDK.getInstance().onActivityResult(requestCode,resultCode,data);
     }
 
     public static void onResume(Activity activity) {
         in_time = System.currentTimeMillis();
+        XiPuSDK.getInstance().onResume(activity);
     }
 
     public static void onStart(Activity activity) {
+        XiPuSDK.getInstance().onStart();
     }
 
     public static void onRestart(Activity activity) {
+        XiPuSDK.getInstance().onRestart(activity);
     }
 
     public static void onPause(Activity activity) {
-        long this_dur = thisTimesTime();
-        Log.e(TAG_HC," setPageDuration " + activity.getClass().getName() + " " +this_dur);
-        Tracking.setPageDuration(activity.getClass().getName(),this_dur);
-        play_time += this_dur;
+        XiPuSDK.getInstance().onPause(activity);
     }
 
     public static void onStop(Activity activity) {
+        XiPuSDK.getInstance().onStop(activity);
     }
 
     public static void onDestroy(Activity activity) {
+        XiPuSDK.getInstance().onDestroy(activity);
     }
 
     public static void onConfigurationChanged(Configuration config) {
 
     }
 
-    public static void onBackPress()
+    public static boolean onBackPress(Runnable back)
     {
-
-    }
-
-    public static long thisTimesTime()
-    {
-        out_time = System.currentTimeMillis();
-        long dur = out_time - in_time;
-        in_time = out_time;
-        return dur;
+        XiPuSDK.getInstance().exitShow();
+        return true;
     }
 
     public static void requestExit() {
 
-        play_time += thisTimesTime();
-        Log.e(TAG_HC," setAppDuration " + play_time);
-        Tracking.setAppDuration(play_time);
-        Log.e(TAG_HC," exitSdk ");
-        Tracking.exitSdk();
+
     }
 
     public static void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
@@ -817,8 +823,56 @@ public class QuickSdk{
 
     }
 
-    public static void onCreate(Bundle savedInstanceState) {
+    public static void onCreate(Bundle savedInstanceState, final Activity activity) {
 
+        QuickSdk.activity = activity;
+        XiPuSDK.getInstance().onCreate(activity,activity.getIntent());
+        XiPuSDK.getInstance().welcome(activity, XiPuSDK.SCREEN_LANDSCAPE);
+        XiPuSDK.getInstance().init(activity, new XiPuSDKCallback() {
+            @Override
+            public void loginSuccess(HashMap<String, Object> resMaps) {
+                String sign = resMaps.get("sign").toString();
+                String mOpenid = resMaps.get("openid").toString();
+                String timestamp = resMaps.get("timestamp").toString();
+                boolean isNewuser = Boolean.parseBoolean(resMaps.get("is_newuser").toString());
+                String mIdentity_status = resMaps.get("identity_status").toString();
+                // 服务器端验证的key（提供SDK时分配)
+                XiPuSDK.getInstance().showBallMenu(activity, XiPuSDK.RIGHT_CENTER);
+
+                JSONObject obj = new JSONObject();
+                try {
+                    obj.put("sign", sign);
+                    obj.put("openid", mOpenid);
+                    obj.put("time", timestamp);
+                    obj.put("is_new", isNewuser);
+                    obj.put("state", mIdentity_status);
+                }catch (Exception e)
+                {
+                }
+
+                notifGame(NOTIF_LOGIN,STATE_SUCCESS,obj);
+            }
+
+            @Override
+            public void changeAccount() {
+                notifGame(NOTIF_EXIT,STATE_SUCCESS,new JSONObject());
+            }
+
+            @Override
+            public void exit() {
+                notifGame(NOTIF_EXIT,STATE_SUCCESS,new JSONObject());
+            }
+
+            @Override
+            public void paySuccess() {
+                notifGame(NOTIF_PAY,STATE_SUCCESS,new JSONObject());
+            }
+
+            @Override
+            public void payFailure(String s) {
+                notifGame(NOTIF_PAY,STATE_FAILED,toJsonObject(s));
+            }
+        }, XiPuSDK.SCREEN_LANDSCAPE);
     }
 
     public static void onWindowFocusChanged(boolean hasFocus) {

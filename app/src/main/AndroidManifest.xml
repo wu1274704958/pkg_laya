@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="one.huolong.online">
+    package="com.xipu.hlzg">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
@@ -17,6 +17,16 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.GET_TASKS"/>
     <uses-permission android:name="android.permission.READ_LOGS"/>
+    <!-- 改变网络状态如是否能联网 -->
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <!-- 允许NFC通讯 -->
+    <uses-permission android:name="android.permission.NFC" />
+    <!-- 过滤所有你设备不支持的应用 -->
+    <uses-feature android:name="android.hardware.nfc.hce" />
+    <!-- 银联 -->
+    <uses-permission android:name="org.simalliance.openmobileapi.SMARTCARD" />
+    <!-- 允许使用振动 -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:name="com.huolong.hf.MyApp"
@@ -64,6 +74,122 @@
         <service
             android:name="com.huolong.hf.killSelfService"
             />
+
+        <activity
+            android:name="com.xipu.msdk.ui.WelcomeActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:launchMode="singleTop"
+            android:theme="@style/XpAppTheme" />
+
+        <activity
+            android:name="com.xipu.msdk.ui.LoginActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:launchMode="singleTop"
+            android:theme="@style/XpAppTheme" />
+
+        <activity
+            android:name="com.xipu.msdk.ui.BrowserActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:launchMode="singleTop"
+            android:theme="@style/XpAppTheme"
+            android:windowSoftInputMode="adjustNothing" />
+
+        <activity
+            android:name="com.xipu.msdk.ui.ImageNotifyActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:launchMode="singleTop"
+            android:theme="@style/XpAppTheme" />
+        <activity
+            android:name="com.xipu.msdk.ui.WebNotifyActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:launchMode="singleTop"
+            android:theme="@style/XpAppTheme" />
+
+        <activity
+            android:name="com.xipu.msdk.ui.PermissionsActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:launchMode="singleTop"
+            android:theme="@style/XpAppTheme" />
+        <!-- 喜扑游戏 微信支付 -->
+        <activity
+            android:name="com.huolong.hf.wxapi.WXPayEntryActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" />
+
+        <!-- 喜扑游戏 银联 开始 -->
+        <uses-library
+            android:name="org.simalliance.openmobileapi"
+            android:required="false" />
+
+        <activity
+            android:name="com.unionpay.uppay.PayActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:excludeFromRecents="true"
+            android:label="@string/app_name"
+            android:screenOrientation="sensorPortrait"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name="com.unionpay.UPPayWapActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:screenOrientation="sensorPortrait"
+            android:windowSoftInputMode="adjustResize" />
+        <!-- 喜扑游戏 银联 结束 -->
+        <!-- 喜扑游戏 支付宝Web端 -->
+        <activity
+            android:name="com.alipay.sdk.app.H5PayActivity"
+            android:configChanges="orientation|keyboardHidden|navigation|screenSize"
+            android:exported="false"
+            android:screenOrientation="behind"
+            android:windowSoftInputMode="adjustResize|stateHidden"></activity>
+
+        <!-- 喜扑游戏 客户端id -->
+        <meta-data
+            android:name="xp_appid"
+            android:value="d59775093d61eb6c0d87af3f3d01f7a0" />
+        <!-- 喜扑游戏 客户端密钥 -->
+        <meta-data
+            android:name="xp_appsecret"
+            android:value="04bcae572add90a8f1b906160c58c75f" />
+        <!-- 喜扑游戏 微信支付appid -->
+        <meta-data
+            android:name="xp_wx_appid"
+            android:value="wx4d1acabe5f06ebe8" />
+
+        <!-- 喜扑游戏 今日头条统计SDK 是否启用 -->
+        <meta-data
+            android:name="xp_use_jrtt"
+            android:value="false" />
+        <!-- 喜扑游戏 今日头条统计SDK appname    主公好坏-->
+        <meta-data
+            android:name="xp_jrtt_appname"
+            android:value="xipudemo" />
+        <!-- 喜扑游戏 今日头条统计SDK channel  zhugonghaohuai -->
+        <meta-data
+            android:name="xp_jrtt_channel"
+            android:value="xipudemo" />
+        <!-- 喜扑游戏 今日头条统计SDK aid  161391-->
+        <meta-data
+            android:name="xp_jrtt_aid"
+            android:value="173051" />
+        <!-- 喜扑游戏 推啊 是否启用 -->
+        <meta-data
+            android:name="xp_use_tuia"
+            android:value="false" />
+        <!-- 喜扑游戏 推啊 advertkey -->
+        <meta-data
+            android:name="xp_tuia_advertkey"
+            android:value="763EF716C4sdasd1F253AB457CC3B5" />
+        <!--喜扑游戏 广点通 USERACTIONSETID -->
+        <meta-data
+            android:name="xp_gdt_useractionsetid"
+            android:value="" />
+        <!-- 喜扑游戏 广点通 APPSECRETKEY -->
+        <meta-data
+            android:name="xp_gdt_appsecretkey"
+            android:value="" />
+
     </application>
 
 </manifest>

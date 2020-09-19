@@ -24,6 +24,7 @@ import androidx.core.content.FileProvider;
 
 import com.huolong.hf.LocalCacheMgr;
 import com.huolong.hf.MainActivity;
+import com.xipu.hlzg.R;
 
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
@@ -48,7 +49,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import one.huolong.online.R;
 
 public class NewPkgMgr {
     private static final String TAG = "NewPkgMgr";
@@ -95,7 +95,7 @@ public class NewPkgMgr {
     public static final int ST_Install = 3;
     private int state = ST_FREE;
     private Info cached;
-    private static final int Pid = 1315;
+    private static final int Pid = 1316;
     public NewPkgMgr(Context context)
     {
         this.context = context;
