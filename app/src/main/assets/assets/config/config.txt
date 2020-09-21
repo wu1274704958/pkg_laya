@@ -1,7 +1,7 @@
 {
     "appid": "1000000010",
     "server": "http://cqweb.xianyul.com/",
-    "pid": 1315,
+    "pid": 1316,
     "phpsvr": "http://cquc.xianyul.com/",
     "res": "http://cqcdn.xianyul.com/cqres/",
     "appkey": "d2f1dcbf604fd059b14407b9aac5ad68",
