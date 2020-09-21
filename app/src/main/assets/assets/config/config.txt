@@ -7,6 +7,6 @@
     "appkey": "d2f1dcbf604fd059b14407b9aac5ad68",
     "payid": "com.sczh.zhan",
     "verType": 3,
-    "is_al": 1
+    "is_xp": 1
 }
 

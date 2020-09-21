@@ -112,6 +112,9 @@ public class LocalCacheMgr {
     {
         ignore_set = new HashSet<>();
         ignore_set.add("assets/config/config.txt");
+        ignore_set.add("js/bundle.js");
+//        ignore_set.add("assets/loading_m/beijing.png");
+//        ignore_set.add("assets/loadbg4.jpg");
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)

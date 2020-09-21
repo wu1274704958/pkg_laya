@@ -860,7 +860,8 @@ public class QuickSdk{
 
             @Override
             public void exit() {
-                notifGame(NOTIF_EXIT,STATE_SUCCESS,new JSONObject());
+                System.exit(0);
+                //notifGame(NOTIF_EXIT,STATE_SUCCESS,new JSONObject());
             }
 
             @Override
