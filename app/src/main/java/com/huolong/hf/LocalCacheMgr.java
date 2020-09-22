@@ -6,7 +6,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-
 import androidx.annotation.RequiresApi;
 
 import com.huolong.hf.utils.Hash;
@@ -112,10 +111,14 @@ public class LocalCacheMgr {
     {
         ignore_set = new HashSet<>();
         ignore_set.add("assets/config/config.txt");
+        ignore_set.add("assets/loading_m/beijing.png");
+        ignore_set.add("layares/loading/loadbg4.jpg");
+        ignore_set.add("assets/loadbg4.jpg");
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request)
+    public WebResourceResponse shouldInterceptRequest(WebView webView,
+                                                      WebResourceRequest request)
     {
 
         String url = request.getUrl().toString();

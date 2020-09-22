@@ -1,12 +1,14 @@
 {
     "appid": "1000000010",
     "server": "http://cqweb.xianyul.com/",
-    "pid": 1315,
+    "pid": 1310,
     "phpsvr": "http://cquc.xianyul.com/",
     "res": "http://cqcdn.xianyul.com/cqres/",
     "appkey": "d2f1dcbf604fd059b14407b9aac5ad68",
     "payid": "com.sczh.zhan",
     "verType": 3,
-    "is_al": 1
+    "is_al": 1,
+    "440011":"审批文号: 国新出审[2020]47号 |软著登记号: 2018SR371389 |ISBN:978-7-498-07235-1 |来文文号: 冀新出呈[2019]21号",
+    "440012":"著作权人: 沈阳腾海科技有限公司 |出版单位: 方圆电子音像出版社有限责任公司"
 }
 
