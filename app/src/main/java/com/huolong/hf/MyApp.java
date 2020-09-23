@@ -5,11 +5,10 @@ import android.util.Log;
 
 import com.tencent.smtt.export.external.TbsCoreSettings;
 import com.tencent.smtt.sdk.QbSdk;
-import com.u8.sdk.U8Application;
 
 import java.util.HashMap;
 
-public class MyApp extends U8Application {
+public class MyApp extends Application {
 
     @Override
     public void onCreate() {
