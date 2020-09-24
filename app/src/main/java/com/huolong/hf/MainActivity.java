@@ -280,7 +280,7 @@ public class MainActivity extends Activity {
                         handler.sendEmptyMessage(1);
                         return;
                     }
-                    if(!is_pop_longtime && loding_time >= 20000)
+                    if(!is_pop_longtime && loding_time >= 40000)
                     {
                         handler.sendEmptyMessage(2);
                     }

@@ -111,7 +111,7 @@ public class LocalCacheMgr {
     public void fill_ignore()
     {
         ignore_set = new HashSet<>();
-        ignore_set.add("assets/config/config.txt");
+        //ignore_set.add("assets/config/config.txt");
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)

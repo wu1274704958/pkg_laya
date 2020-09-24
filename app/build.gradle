@@ -22,8 +22,8 @@ android {
         applicationId "one.huolong.online"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 202009116
-        versionName "2.3.7"
+        versionCode 202009246
+        versionName "2.3.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         signingConfig signingConfigs.release
 
