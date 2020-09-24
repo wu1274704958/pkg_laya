@@ -114,7 +114,7 @@ public class MainActivity extends Activity {
     });
     AgentWebX5 mAgentWeb;
     //private String url = "http://debugtbs.qq.com";
-    private String url = "http://cqcdn.aolonggame.cn/cqres/web_online/index.php";
+    private String url = "http://cqcdn.aolonggame.cn/cqres/web_online_xp/index.php";
     //private String url = "http://47.102.115.132:8081/cqres/web_online/index.php";
     //private String url = "http://10.10.6.67:8900/bin/index.html";
     FrameLayout root;
@@ -279,7 +279,7 @@ public class MainActivity extends Activity {
                         handler.sendEmptyMessage(1);
                         return;
                     }
-                    if(!is_pop_longtime && loding_time >= 20000)
+                    if(!is_pop_longtime && loding_time >= 40000)
                     {
                         handler.sendEmptyMessage(2);
                     }
