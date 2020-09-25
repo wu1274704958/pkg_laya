@@ -109,7 +109,7 @@ public class LocalCacheMgr {
 
     private static void log(String s)
     {
-        Log.e(TAG, s);
+        //Log.e(TAG, s);
     }
 
     public void fill_ignore()
