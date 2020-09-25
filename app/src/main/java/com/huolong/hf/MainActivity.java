@@ -661,6 +661,12 @@ public class MainActivity extends Activity {
         RestartAPPTool.restartAPP2(this,1900);
     }
 
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(newBase);
+        QuickSdk.activityAttachBaseContext(newBase);
+    }
+
     private LinearLayout mem_info;
     private TextView[] mem_tvs;
 

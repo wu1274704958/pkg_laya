@@ -22,6 +22,19 @@ import android.content.Context;
 import androidx.core.app.ActivityCompat;
 
 
+import com.qianqi.achive.DialogFactory;
+import com.qianqi.integrate.QianQiApplication;
+import com.qianqi.integrate.QianqiSDK;
+import com.qianqi.integrate.bean.LoginResult;
+import com.qianqi.integrate.bean.PayParams;
+import com.qianqi.integrate.bean.RoleParams;
+import com.qianqi.integrate.bean.SubmitExtraDataParams;
+import com.qianqi.integrate.callback.BackPressedCallBack;
+import com.qianqi.integrate.callback.GameInitCallBack;
+import com.qianqi.integrate.callback.GameLoginCallBack;
+import com.qianqi.integrate.callback.GamePayCallBack;
+import com.qianqi.integrate.callback.SDKSwitchCallBack;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -543,16 +556,73 @@ public class QuickSdk{
         }
     }
 
-    public static void login(Activity activity,User u)
+    public static void login(final Activity activity, User u)
     {
         Logw.e("login b");
+        QianqiSDK.autoLogin(activity, new GameLoginCallBack() {
+            public void loginSuccess(LoginResult loginResult) {
+                try {
+                    JSONObject js = toJson(LoginResult.class,loginResult);
+                    notifGame(NOTIF_LOGIN,STATE_SUCCESS,js);
+                } catch (Exception e) {
+                    Logw.e( "login except "  + e.getMessage());
+                }
+                Logw.e( "登录成功！");
+            }
 
+            public void loginFail(int type, int errorCode, String errorMsg) {
+                Logw.e("自动登录失败！");
+                //notifGame(NOTIF_LOGIN,STATE_FAILED,toJsonObject("ty "+type,"errorCode "+errorCode,errorMsg ));
+                loginEx(activity);
+            }
+        });
+        Logw.e("login e");
+    }
+
+    public static void loginEx(Activity activity)
+    {
+        Logw.e("login b");
+        QianqiSDK.showLogin(activity,0, new GameLoginCallBack() {
+            public void loginSuccess(LoginResult loginResult) {
+                try {
+                    JSONObject js = toJson(LoginResult.class,loginResult);
+                    notifGame(NOTIF_LOGIN,STATE_SUCCESS,js);
+                } catch (Exception e) {
+                    Logw.e( "login except "  + e.getMessage());
+                }
+                Logw.e( "登录成功！");
+            }
+
+            public void loginFail(int type, int errorCode, String errorMsg) {
+                Logw.e("登录失败！");
+                notifGame(NOTIF_LOGIN,STATE_FAILED,toJsonObject("ty "+type,"errorCode "+errorCode,errorMsg ));
+            }
+        });
         Logw.e("login e");
     }
 
     public static void setGameRoleInfo(Activity activity,RoleInfo roleInfo,Boolean is_create,SetGameRoleInfoEx oths)
     {
+        SubmitExtraDataParams param = new SubmitExtraDataParams();
 
+        boolean is_enter = oths.is_enter;
+        param.setCode(is_create ? 1040 : is_enter ? 1024 : 1042);
+        String serverName = oths.ServerName;
+
+        RoleParams roleParams = new RoleParams();
+        roleParams.setServerId(roleInfo.serverName);
+        roleParams.setServerName(serverName);
+        roleParams.setRoleId(roleInfo.gameRoleID);
+        roleParams.setRoleName(roleInfo.gameRoleName);
+        roleParams.setRoleLevel(roleInfo.gameRoleLevel);
+        roleParams.setVipLevel(Integer.parseInt(roleInfo.vipLevel));
+        roleParams.setPlatformServerId(roleInfo.serverName);
+        roleParams.setrExInfo("{}");
+
+        param.setExInfo("{}");
+        param.setRoleParams(roleParams);
+
+        QianqiSDK.gameEvent(activity, param,"{}");
     }
 
     public static void logout(Activity activity)
@@ -567,7 +637,47 @@ public class QuickSdk{
 
     public static void pay(Activity activity,final Order order, ServerInfo serverInfo,SetGameRoleInfoEx oths)
     {
+        PayParams param = new PayParams();
+        RoleParams roleParams = new RoleParams();
 
+        param.setPayWay(0);
+        param.setCoinType("CNY");
+        param.setOrderId(order.cpOrderID);
+
+        param.setRoleParams(roleParams);
+        param.setShowCoin(Integer.parseInt(order.count));
+        param.setProductName(order.goodsName);
+        param.setMoney(order.amount+".00");
+        param.setProductDesc(order.goodsName);
+        param.setProductId(order.goodsID);
+        param.setChannelProductId(order.goodsID);
+        param.setoExInfo("{}");
+        param.setVirtualCoinType(order.goodsName);
+        param.setCount(Integer.parseInt(order.count));
+
+        roleParams.setServerId(serverInfo.serverID);
+        roleParams.setServerName(serverInfo.serverName);
+        roleParams.setRoleId(serverInfo.gameRoleID);
+        roleParams.setRoleName(serverInfo.gameRoleName);
+        roleParams.setRoleLevel(serverInfo.gameRoleLevel);
+        roleParams.setVipLevel(Integer.parseInt(serverInfo.vipLevel));
+        roleParams.setPlatformServerId(serverInfo.serverID);
+        roleParams.setrExInfo("{}");
+
+        QianqiSDK.pay(activity, param, new GamePayCallBack() {
+            public void paySuccess(int type) {
+                Log.e("TAG", "支付成功！");
+                notifGame(NOTIF_PAY,STATE_SUCCESS,toJsonObject("ty " + type));
+            }
+
+            public void payFail(int type, int errorCode, String errorMsg) {
+                notifGame(NOTIF_PAY,STATE_FAILED,toJsonObject("ty " + type,"err " + errorCode,errorMsg));
+            }
+
+            public void payCancel() {
+                notifGame(NOTIF_PAY,STATE_CANCEL,new JSONObject());
+            }
+        });
     }
 
     public static <T> T formJson(Class<T> tClass,JSONObject object) throws JSONException, InstantiationException, IllegalAccessException, InvocationTargetException {
@@ -707,7 +817,38 @@ public class QuickSdk{
 
     public static void init(final Activity activity) {
         try {
+            QianqiSDK.initSDK(activity, new GameInitCallBack() {
+                public void initSuccess() {
+                    Logw.e("回调游戏 initSuccess");
+                    notifGame(NOTIF_INIT,STATE_SUCCESS,new JSONObject());
+                }
 
+                public void initFail(int errorCode, String errorMsg) {
+                    Logw.e("初始化失败");
+                    notifGame(NOTIF_INIT,STATE_FAILED,toJsonObject("code" + errorCode,errorMsg));
+                }
+
+                public void exInfoBack(String str) {
+                    notifGame(101,STATE_SUCCESS,toJsonObject(str));
+                    Logw.e("启动应用时返回邀请进入房间等的信息");
+                }
+
+                public void localGoodsCallback(String str) {
+                    notifGame(100,STATE_SUCCESS,toJsonObject(str));
+                    Logw.e("启动应用时返回本地化商品信息（比如GooglePay或AppStore）");
+                }
+            });
+
+            QianqiSDK.switchListener(activity, new SDKSwitchCallBack() {
+                public void doSwitch(boolean isLoginAfterRestart) {
+                    Logw.e( "通知游戏切换账号");
+                    notifGame(NOTIF_EXIT,STATE_SUCCESS,new JSONObject());
+                    if(isLoginAfterRestart)
+                    {
+                        loginEx(activity);
+                    }
+                }
+            });
 
         }catch (Exception e)
         {
@@ -718,40 +859,48 @@ public class QuickSdk{
 
 
     public static void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
-
+        QianqiSDK.onActivityResult(requestCode,resultCode,data);
     }
 
     public static void onResume(Activity activity) {
-
+        QianqiSDK.onResume();
     }
 
     public static void onStart(Activity activity) {
-
+        QianqiSDK.onStart();
     }
 
     public static void onRestart(Activity activity) {
-
+        QianqiSDK.onRestart();
     }
 
     public static void onPause(Activity activity) {
-
+        QianqiSDK.onPause();
     }
 
     public static void onStop(Activity activity) {
-
+        QianqiSDK.onStop();
     }
 
     public static void onDestroy(Activity activity) {
-
+        QianqiSDK.onDestroy();
     }
 
     public static void onConfigurationChanged(Configuration config) {
-
+        QianqiSDK.activityOnConfigurationChanged(config);
     }
 
-    public static boolean onBackPress(Runnable back)
+    public static boolean onBackPress(final Runnable back)
     {
-
+        QianqiSDK.backPressed(new BackPressedCallBack() {
+            @Override
+            public void backPressedCallback(int code) {
+                if (code == 0) {
+                    Logw.e("游戏自身的退出框");
+                    back.run();
+                }
+            }
+        });
         return true;
     }
 
@@ -762,25 +911,19 @@ public class QuickSdk{
 
     public static void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
     {
-        gameActivity_onRequestPermissionsResult(activity,requestCode,permissions,grantResults);
+        QianqiSDK.onRequestPermissionsResult(requestCode,permissions,grantResults);
     }
 
     public static void activityAttachBaseContext(Context context)
     {
-
+        QianqiSDK.activityAttachBaseContext(context);
     }
 
     public static void onCreate(Bundle savedInstanceState,Activity activity) {
 
         QuickSdk.activity = activity;
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-        {
-            ActivityCompat.requestPermissions(activity,new String[]{
-                    READ_PHONE_STATE,WRITE_EXTERNAL_STORAGE
-            },1);
-        }else {
-            init_(activity);
-        }
+        init(activity);
+
     }
 
     public static void onWindowFocusChanged(boolean hasFocus) {

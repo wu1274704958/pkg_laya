@@ -107,13 +107,18 @@ public class LocalCacheMgr {
         fill_ignore();
     }
 
+    private static void log(String s)
+    {
+        Log.e(TAG, s);
+    }
+
     public void fill_ignore()
     {
         ignore_set = new HashSet<>();
         ignore_set.add("assets/config/config.txt");
-        ignore_set.add("assets/loading_m/beijing.png");
-        ignore_set.add("layares/loading/loadbg4.jpg");
-        ignore_set.add("assets/loadbg4.jpg");
+        //ignore_set.add("assets/loading_m/beijing.png");
+        //ignore_set.add("layares/loading/loadbg4.jpg");
+        //ignore_set.add("assets/loadbg4.jpg");
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -133,7 +138,7 @@ public class LocalCacheMgr {
             {
 
                 String mime = request.getRequestHeaders().get("Accept");
-                //Log.e(TAG,"using cached file " + sub);
+                log("using cached file " + sub);
                 return new WebResourceResponse(mime,"UTF-8",is);
             }
         }
@@ -149,7 +154,7 @@ public class LocalCacheMgr {
                 File f = new File(localDir +"/"+ md5);
                 if(f.exists() || get_state(md5) == ST_SUCCESS )
                 {
-                   // Log.e(TAG, "using cached file " + url + " " + md5);
+                    log( "using cached file " + url + " " + md5);
                     InputStream in = new FileInputStream(f);
                     return new WebResourceResponse(mime, "UTF-8", in);
                 }else
@@ -159,7 +164,7 @@ public class LocalCacheMgr {
                     PipedInputStream in = new PipedInputStream(out);
 
                     down(md5);
-                    //Log.e(TAG, "download file " + url + " " + md5);
+                    log( "download file " + url + " " + md5);
                     download(out,url, mime, localDir, md5, downloadListener);
 
                     return new WebResourceResponse(mime, "UTF-8", in);
@@ -198,7 +203,7 @@ public class LocalCacheMgr {
     public OnDownloadListener downloadListener = new OnDownloadListener() {
         @Override
         public void onDownloadSuccess(File file, String name) {
-            //Log.e(TAG, "download success " + name);
+            log( "download success " + name);
             to_success(name);
         }
 

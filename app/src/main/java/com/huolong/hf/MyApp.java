@@ -3,12 +3,13 @@ package com.huolong.hf;
 import android.app.Application;
 import android.util.Log;
 
+import com.qianqi.integrate.QianQiApplication;
 import com.tencent.smtt.export.external.TbsCoreSettings;
 import com.tencent.smtt.sdk.QbSdk;
 
 import java.util.HashMap;
 
-public class MyApp extends Application {
+public class MyApp extends QianQiApplication {
 
     @Override
     public void onCreate() {
