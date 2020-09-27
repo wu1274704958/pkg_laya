@@ -47,7 +47,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 
 import layaair.game.IMarket.IPlugin;
@@ -62,7 +61,6 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import one.huolong.online.R;
 
-import static android.webkit.WebSettings.LOAD_CACHE_ELSE_NETWORK;
 
 public class MainActivity extends Activity {
 

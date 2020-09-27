@@ -115,8 +115,8 @@ class loadingView
     }
 }
 
-window.native_call = {};
-window.native_call.go = function(s)
+window.android = {};
+window.android.game_call = function(s)
 {
     if(window.loadingView) window.loadingView.real_game_call(s);
 };
@@ -129,7 +129,7 @@ if(window.loadingView)
     window.loadingView.setFontColor("#ffffff");//设置字体颜色
     window.loadingView.setTips(["新世界的大门即将打开","敌军还有30秒抵达战场","妈妈说，心急吃不了热豆腐"]);//设置tips数组，会随机出现
 
-    window.native_call.go("{\"id\":1 ,\"cmd\":0,\"body\":{},\"is_destroy\":true}");
+    window.android.game_call("{\"id\":1 ,\"cmd\":0,\"body\":{},\"is_destroy\":true}");
 }
 
 
