@@ -110,6 +110,10 @@ public class LocalCacheMgr {
 
     private static void log(String s)
     {
+        Log.e(TAG, s);
+    }
+    private static void logv(String s)
+    {
         //Log.e(TAG, s);
     }
 
@@ -161,7 +165,7 @@ public class LocalCacheMgr {
                     PipedInputStream in = new PipedInputStream(out);
 
                     down(md5);
-                    log( "download file " + url + " " + md5);
+                    logv( "download file " + url + " " + md5);
                     download(out,url, mime, localDir, md5, downloadListener);
 
                     return new WebResourceResponse(mime, "UTF-8", in);
@@ -200,7 +204,7 @@ public class LocalCacheMgr {
     public OnDownloadListener downloadListener = new OnDownloadListener() {
         @Override
         public void onDownloadSuccess(File file, String name) {
-            log( "download success " + name);
+            logv( "download success " + name);
             to_success(name);
         }
 
@@ -352,6 +356,7 @@ public class LocalCacheMgr {
                     try {
                         out.flush();
                         out.close();
+                        log("close pipe");
                     } catch (IOException ex) {
                         ex.printStackTrace();
                     }
@@ -379,6 +384,7 @@ public class LocalCacheMgr {
                         try {
                             out.flush();
                             out.close();
+                            log("close pipe");
                         } catch (IOException ex) {
                             ex.printStackTrace();
                         }
@@ -453,8 +459,10 @@ public class LocalCacheMgr {
                         if (fos != null) {
                             fos.close();
                         }
-                        if(success || !is_retry)
+                        if(success || !is_retry) {
                             out.close();
+                            log("close pipe");
+                        }
                         response.close();
                         if(success) {
                             File real_file = new File(dir,destFileName);
