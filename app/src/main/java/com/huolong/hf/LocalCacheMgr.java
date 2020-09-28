@@ -162,14 +162,15 @@ public class LocalCacheMgr {
                 }else
                 if(get_state(md5) < 0)
                 {
-                    final PipedOutputStream out = new PipedOutputStream();
-                    PipedInputStream in = new PipedInputStream(out);
+                    //final PipedOutputStream out = new PipedOutputStream();
+                   //PipedInputStream in = new PipedInputStream(out);
 
                     down(md5);
-                    logv( "download file " + url + " " + md5);
-                    download(out,url, mime, localDir, md5, downloadListener);
 
-                    return new WebResourceResponse(mime, "UTF-8", in);
+                    log( "download file " + url + " " + md5);
+                    download(null,url, mime, localDir, md5, downloadListener);
+
+                    return new WebResourceResponse(mime, "UTF-8", null);
                 }
             }
         } catch (Exception e) {
@@ -343,7 +344,7 @@ public class LocalCacheMgr {
         OutputStream o = null;
         if((o = out.get()) != null) {
             try {
-                o.flush();
+                //o.flush();
                 o.close();
                 out.clear();
                 log("pipe close ....");
@@ -362,7 +363,6 @@ public class LocalCacheMgr {
                 .build();
 
         OkHttpClient okHttpClient = new OkHttpClient();
-
         final WeakReference<OutputStream> out = new WeakReference<>(real_out);
         //异步请求
         okHttpClient.newCall(request).enqueue(new Callback() {
@@ -445,6 +445,10 @@ public class LocalCacheMgr {
                             Log.e(TAG,"pipe write failed err = " + e.getMessage());
                             clear_pipe(out);
                         }
+                        {
+                            OutputStream o = null;
+                            if((o = out.get())!= null) o.flush();
+                        }
                         sum += len;
                         int progress = (int) (sum * 1.0f / total * 100);
                         //下载中更新进度条
@@ -452,10 +456,6 @@ public class LocalCacheMgr {
                             listener.onDownloading(progress,destFileName);
                     }
                     fos.flush();
-                    {
-                        OutputStream o = null;
-                        if((o = out.get())!= null) o.flush();
-                    }
                     success = true;
                     //下载完成
 
@@ -464,8 +464,7 @@ public class LocalCacheMgr {
                     success = false;
                     if(!(is_retry = retry(e.getMessage(),out,url,mime,destFileDir,destFileName,listener,5,sum)))
                     {
-                        OutputStream o = null;
-                        if((o = out.get())!= null) o.flush();
+                        clear_pipe(out);
                         if(listener!=null) listener.onDownloadFailed(e,destFileName);
                     }
                 }finally {
