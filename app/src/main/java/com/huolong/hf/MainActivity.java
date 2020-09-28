@@ -217,7 +217,8 @@ public class MainActivity extends Activity {
         mPlugin = new GameEngine(this);
         mPlugin.game_plugin_set_runtime_proxy(mProxy);
         mPlugin.game_plugin_set_option("localize","false");
-        mPlugin.game_plugin_set_option("gameUrl", "http://10.10.6.67:8900/bin/index.js");
+        //mPlugin.game_plugin_set_option("gameUrl", "http://10.10.6.67:8900/bin/index.js");
+        mPlugin.game_plugin_set_option("gameUrl", "http://cqcdn.xianyul.com/andRes/index.js");
         mPlugin.game_plugin_init(3);
         View gameView = mPlugin.game_plugin_get_view();
         isLoad=true;
