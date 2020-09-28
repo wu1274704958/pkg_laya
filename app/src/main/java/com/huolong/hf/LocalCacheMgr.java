@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.lang.ref.WeakReference;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -109,7 +110,7 @@ public class LocalCacheMgr {
 
     private static void log(String s)
     {
-        //Log.e(TAG, s);
+        Log.e(TAG, s);
     }
 
     public void fill_ignore()
@@ -336,8 +337,22 @@ public class LocalCacheMgr {
             }
         }
     }
+    private static void clear_pipe(WeakReference<OutputStream> out)
+    {
+        OutputStream o = null;
+        if((o = out.get()) != null) {
+            try {
+                o.flush();
+                o.close();
+                out.clear();
+                log("pipe close ....");
+            } catch (IOException ex) {
+                Log.e(TAG,"clear_pipe err = " + ex.getMessage());
+            }
+        }
+    }
 
-    public void download(final OutputStream out, final String url, final String mime, final String destFileDir, final String destFileName, final OnDownloadListener listener) {
+    public void download(final OutputStream real_out, final String url, final String mime, final String destFileDir, final String destFileName, final OnDownloadListener listener) {
 
         Request request = new Request.Builder()
                 .addHeader("User-Agent","Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1")
@@ -347,17 +362,13 @@ public class LocalCacheMgr {
 
         OkHttpClient okHttpClient = new OkHttpClient();
 
+        final WeakReference<OutputStream> out = new WeakReference<>(real_out);
         //异步请求
         okHttpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 if(!retry(e.getMessage(),out,url,mime,destFileDir,destFileName,listener,0,0)) {
-                    try {
-                        out.flush();
-                        out.close();
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }
+                    clear_pipe(out);
                     // 下载失败监听回调
                     if (listener != null)
                         listener.onDownloadFailed(e, destFileName);
@@ -379,12 +390,7 @@ public class LocalCacheMgr {
                     response.close();
                     String reason = "failed code = " + response.code();
                     if(!retry(reason,out,url,mime,destFileDir,destFileName,listener,0,0)) {
-                        try {
-                            out.flush();
-                            out.close();
-                        } catch (IOException ex) {
-                            ex.printStackTrace();
-                        }
+                        clear_pipe(out);
                         // 下载失败监听回调
                         if (listener != null)
                             listener.onDownloadFailed(new Exception(reason), destFileName);
@@ -427,7 +433,15 @@ public class LocalCacheMgr {
 
                     while ((len = is.read(buf)) != -1) {
                         fos.write(buf, 0, len);
-                        out.write(buf,0,len);
+                        try {
+                            OutputStream o = null;
+                            if((o = out.get())!= null)
+                                o.write(buf, 0, len);
+                        }catch (Exception e)
+                        {
+                            Log.e(TAG,"pipe write failed err = " + e.getMessage());
+                            clear_pipe(out);
+                        }
                         sum += len;
                         int progress = (int) (sum * 1.0f / total * 100);
                         //下载中更新进度条
@@ -435,7 +449,10 @@ public class LocalCacheMgr {
                             listener.onDownloading(progress,destFileName);
                     }
                     fos.flush();
-                    out.flush();
+                    {
+                        OutputStream o = null;
+                        if((o = out.get())!= null) o.flush();
+                    }
                     success = true;
                     //下载完成
 
@@ -444,7 +461,8 @@ public class LocalCacheMgr {
                     success = false;
                     if(!(is_retry = retry(e.getMessage(),out,url,mime,destFileDir,destFileName,listener,5,sum)))
                     {
-                        out.flush();
+                        OutputStream o = null;
+                        if((o = out.get())!= null) o.flush();
                         if(listener!=null) listener.onDownloadFailed(e,destFileName);
                     }
                 }finally {
@@ -457,7 +475,10 @@ public class LocalCacheMgr {
                             fos.close();
                         }
                         if(success || !is_retry)
-                            out.close();
+                        {
+                            OutputStream o = null;
+                            if((o = out.get())!= null) o.close();
+                        }
                         response.close();
                         if(success) {
                             File real_file = new File(dir,destFileName);
@@ -475,7 +496,7 @@ public class LocalCacheMgr {
         });
     }
 
-    private boolean retry(String reason, final OutputStream out, final String url, final String mime, final String destFileDir, final String destFileName,
+    private boolean retry(String reason, final WeakReference<OutputStream> out, final String url, final String mime, final String destFileDir, final String destFileName,
                           final OnDownloadListener listener, int lazy_ms,long pos)
     {
         int v = get_retry(destFileName);
@@ -489,11 +510,11 @@ public class LocalCacheMgr {
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        download(out,url,mime,destFileDir,destFileName,listener);
+                        download(out.get(),url,mime,destFileDir,destFileName,listener);
                     }
                 },lazy_ms);
             }else
-                download(out,url,mime,destFileDir,destFileName,listener);
+                download(out.get(),url,mime,destFileDir,destFileName,listener);
             return true;
         }
         return false;
