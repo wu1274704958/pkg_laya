@@ -25,6 +25,7 @@ import java.io.PipedOutputStream;
 import java.lang.ref.WeakReference;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -85,24 +86,12 @@ public class LocalCacheMgr {
         localDir = activity.getFilesDir().getAbsolutePath();
         st_map = new HashMap<>();
         Log.e(TAG,head);
-<<<<<<< HEAD
-=======
-        fill_ignore();
+
     }
 
     private static void log(String s)
     {
         Log.e(TAG, s);
-    }
-
-    public void fill_ignore()
-    {
-        ignore_set = new HashSet<>();
-        ignore_set.add("assets/config/config.txt");
-        //ignore_set.add("assets/loading_m/beijing.png");
-        //ignore_set.add("layares/loading/loadbg4.jpg");
-        //ignore_set.add("assets/loadbg4.jpg");
->>>>>>> 707abce... no kotlin batter local cache
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
