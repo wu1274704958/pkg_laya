@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.gzlxq.yhcq.R;
 import com.huolong.hf.utils.BatteryReceiver;
 import com.huolong.hf.utils.NetMonitor;
 import com.huolong.hf.utils.Utils;

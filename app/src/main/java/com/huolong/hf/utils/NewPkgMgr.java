@@ -24,7 +24,7 @@ import androidx.core.content.FileProvider;
 
 import com.huolong.hf.LocalCacheMgr;
 import com.huolong.hf.MainActivity;
-import com.huolong.hf.R;
+import com.gzlxq.yhcq.R;
 
 import org.json.JSONObject;
 
@@ -94,7 +94,7 @@ public class NewPkgMgr {
     public static final int ST_Install = 3;
     private int state = ST_FREE;
     private Info cached;
-    private static final int Pid = 1314;
+    private static final int Pid = 2200;
     public NewPkgMgr(Context context)
     {
         this.context = context;

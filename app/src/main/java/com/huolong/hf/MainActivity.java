@@ -43,6 +43,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.gzlxq.yhcq.R;
 import com.huolong.hf.utils.NewPkgMgr;
 import com.huolong.hf.utils.RestartAPPTool;
 import com.huolong.hf.utils.Utils;
@@ -105,7 +106,7 @@ public class MainActivity extends Activity {
     });
     AgentWebX5 mAgentWeb;
     //private String url = "http://debugtbs.qq.com";
-    private String url = "http://cqcdn.aolonggame.cn/cqres/web_online/index.php";
+    private String url = "http://cqcdn.aolonggame.cn/cqres/web_online_7r/index.php";
     //private String url = "http://47.102.115.132:8081/cqres/web_online/index.php";
     //private String url = "http://10.10.6.67:8900/bin/index.html";
     FrameLayout root;
@@ -270,7 +271,7 @@ public class MainActivity extends Activity {
                         handler.sendEmptyMessage(1);
                         return;
                     }
-                    if(!is_pop_longtime && loding_time >= 20000)
+                    if(!is_pop_longtime && loding_time >= 40000)
                     {
                         handler.sendEmptyMessage(2);
                     }
@@ -391,7 +392,7 @@ public class MainActivity extends Activity {
 
                 if(!is_hide_splash)
                 {
-                    pop_error_dialog("游戏加载错误!");
+                    //pop_error_dialog("游戏加载错误!");
                 }
                 Log.e("WVCM",s);
             }
