@@ -25,7 +25,6 @@ import androidx.core.content.FileProvider;
 import com.huolong.hf.LocalCacheMgr;
 import com.huolong.hf.MainActivity;
 
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -161,7 +160,7 @@ public class NewPkgMgr {
         okHttpClient.newCall(request).enqueue(new Callback(){
 
             @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+            public void onResponse( Call call,  Response response) throws IOException {
                 if(response.code() == 200)
                 {
                     try {
@@ -182,7 +181,7 @@ public class NewPkgMgr {
             }
 
             @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+            public void onFailure( Call call,  IOException e) {
                 Log.e(TAG,"ver failed msg = " + e.getMessage());
                 state = ST_FREE;
             }

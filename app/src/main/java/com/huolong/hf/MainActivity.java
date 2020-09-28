@@ -42,7 +42,6 @@ import com.just.agentwebX5.AgentWebX5;
 import com.plug.wv.FullScreenDialog;
 import com.tencent.smtt.sdk.QbSdk;
 
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -338,7 +337,7 @@ public class MainActivity extends Activity {
         okHttpClient.newCall(request).enqueue(new Callback(){
 
             @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+            public void onResponse( Call call,  Response response) throws IOException {
                 if(response.code() == 200)
                 {
                     try {
@@ -352,7 +351,7 @@ public class MainActivity extends Activity {
             }
 
             @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+            public void onFailure( Call call,  IOException e) {
                 Log.e("upload_err_msg","upload failed msg = " + e.getMessage());
             }
         });
