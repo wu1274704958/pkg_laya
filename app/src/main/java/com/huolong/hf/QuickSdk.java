@@ -395,7 +395,7 @@ public class QuickSdk{
     {
         Log.e("QuickSdk","init_");
         try {
-            final InitConfig config = new InitConfig("182083", "huolong03");
+            final InitConfig config = new InitConfig("199003", "hlzgdj");
             config.setUriConfig(UriConfig.DEFAULT);
             config.setEnablePlay(true);
 
@@ -413,7 +413,7 @@ public class QuickSdk{
             AppLog.setUserUniqueID(DeviceIdUtils.getDeviceId(activity_));
             Log.e(TAG_HC,"init b");
             Tracking.setDebugMode(true);
-            Tracking.initWithKeyAndChannelId(activity_.getApplication(),"f554949c3966bb1924195b8548896ea4","_default_");
+            Tracking.initWithKeyAndChannelId(activity_.getApplication(),"4c1b1cfb1cbedc5bf8acfd28cc5d4bed","_default_");
             Log.e(TAG_HC,"init e");
         }catch (Exception e)
         {

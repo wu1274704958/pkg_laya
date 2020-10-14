@@ -19,11 +19,11 @@ android {
     compileSdkVersion 29
     buildToolsVersion "29.0.0"
     defaultConfig {
-        applicationId "one.huolong.online"
+        applicationId "one.huolongdj.online"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 202009196
-        versionName "2.4.0"
+        versionCode 202010146
+        versionName "2.4.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         signingConfig signingConfigs.release
 

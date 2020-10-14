@@ -58,7 +58,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import one.huolong.online.R;
+import one.huolongdj.online.R;
 
 
 public class MainActivity extends Activity {
@@ -217,7 +217,7 @@ public class MainActivity extends Activity {
         mPlugin.game_plugin_set_runtime_proxy(mProxy);
         mPlugin.game_plugin_set_option("localize","false");
         //mPlugin.game_plugin_set_option("gameUrl", "http://10.10.6.67:8900/bin/index.js");
-        mPlugin.game_plugin_set_option("gameUrl", "http://cqcdn.xianyul.com/andRes/index.js");
+        mPlugin.game_plugin_set_option("gameUrl", "http://cqcdn.xianyul.com/goldRes/index.js");
         mPlugin.game_plugin_init(3);
         View gameView = mPlugin.game_plugin_get_view();
         isLoad=true;

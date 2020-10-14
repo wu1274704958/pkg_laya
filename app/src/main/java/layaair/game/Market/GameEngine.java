@@ -5,7 +5,7 @@ import layaair.game.IMarket.IPluginRuntimeProxy;
 import layaair.game.conch.ILayaEventListener;
 import layaair.game.conch.ILayaGameEgine;
 import layaair.game.conch.LayaConch5;
-import one.huolong.online.R;
+import one.huolongdj.online.R;
 
 import android.app.Activity;
 import android.content.Context;
