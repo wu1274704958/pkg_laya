@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.lang.ref.WeakReference;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -297,6 +298,48 @@ public class LocalCacheMgr {
             } catch (IOException ex) {
                 Log.e(TAG,"clear_pipe err = " + ex.getMessage());
             }
+        }
+    }
+    public interface OnLoadConfig{
+        void onResult(String s);
+    }
+
+    public static Boolean loadConfigBusy = false;
+    public static int loadConfig(Activity activity, final OnLoadConfig onLoadConfig)
+    {
+        if(loadConfigBusy) return -1;
+        try {
+            final InputStream is = activity.getAssets().open("assets/config/config.txt");
+            loadConfigBusy = true;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    StringBuffer sb = new StringBuffer();
+                    byte[] buf = new byte[1024 * 1024];
+                    int len = -1;
+                    try {
+                        while ((len = is.read(buf)) != -1)
+                        {
+                            sb.append(new String(buf,0,len, StandardCharsets.UTF_8));
+                        }
+                        onLoadConfig.onResult(sb.toString());
+                    }catch (Exception e)
+                    {
+                        Logw.e("load config exception err = " + e.getMessage());
+                        onLoadConfig.onResult(null);
+                    }finally {
+                        loadConfigBusy = false;
+                        try {
+                            is.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }).start();
+            return 0;
+        } catch (IOException e) {
+            return -2;
         }
     }
 
