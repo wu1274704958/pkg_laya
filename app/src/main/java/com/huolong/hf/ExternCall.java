@@ -62,6 +62,7 @@ public class ExternCall {
     public static final int RegResume = 14;
     public static final int PkgInfo = 15;
     public static final int ALive = 16;
+    public static final int GetConfig = 19;
 
     public ExternCall(AgentWebX5 web,Activity activity) {
         this.web = web;
@@ -127,6 +128,7 @@ public class ExternCall {
     private EditDialog editDialog;
 
     public void call(int cmd,int id,JSONObject body,boolean is_destroy) throws JSONException {
+        Log.e(TAG,"call " + cmd + " id " + id + " is_destroy " + is_destroy );
         MyCB cb = new MyCB(web);
         add(id,cb,is_destroy);
 
@@ -207,6 +209,36 @@ public class ExternCall {
             case ALive:
                 {
                     GameAlive = true;
+                    break;
+                }
+            case GetConfig:
+                {
+                    final int local_id = id;
+                    int r = LocalCacheMgr.loadConfig(activity, new LocalCacheMgr.OnLoadConfig() {
+                        @Override
+                        public void onResult(String s) {
+                            JSONObject object = new JSONObject();
+                            try {
+                                if (s != null) {
+                                    object.put("ret", 0);
+                                    object.put("val", s);
+                                    sendMessageToGame(callbacks, local_id, object.toString());
+                                } else {
+                                    object.put("ret", -3);
+                                    sendMessageToGame(callbacks, local_id, object.toString());
+                                }
+                            }catch (Exception e)
+                            {
+                                Logw.e("load config return data err = "+e.getMessage());
+                            }
+                        }
+                    });
+                    if(r != 0)
+                    {
+                        JSONObject object = new JSONObject();
+                        object.put("ret",r);
+                        sendMessageToGame(callbacks,id,object.toString());
+                    }
                     break;
                 }
         }
