@@ -19,7 +19,7 @@ android {
     compileSdkVersion 29
     buildToolsVersion "29.0.0"
     defaultConfig {
-        applicationId "one.huolongdj.online"
+        applicationId "one.huolongdj.online.test"
         minSdkVersion 21
         targetSdkVersion 29
         versionCode 202010146
@@ -47,7 +47,7 @@ android {
     }
     android.applicationVariants.all { variant ->
         variant.outputs.all {
-            def apkName = "cq_native_${variant.applicationId}_${variant.versionName}"
+            def apkName = "gold_native_${variant.applicationId}_${variant.versionName}"
             // 判断是否为空
             if (!variant.flavorName.isEmpty()) {
                 apkName += "_${variant.flavorName}"

@@ -27,7 +27,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import one.huolongdj.online.R;
+import one.huolongdj.online.test.R;
 
 
 public class ExternCall {
