@@ -3,6 +3,10 @@ package com.huolong.hf;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.ClipDescription;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
@@ -61,6 +65,7 @@ public class ExternCall {
     public static final int RegResume = 14;
     public static final int PkgInfo = 15;
     public static final int ALive = 16;
+    public static final int ClipBoard = 21;
 
     public ExternCall(AgentWebX5 web,Activity activity) {
         this.web = web;
@@ -205,12 +210,54 @@ public class ExternCall {
                     GameAlive = true;
                     break;
                 }
+            case ClipBoard:
+                {
+                    boolean to = body.getBoolean("to");
+                    ClipboardManager clipboardManager = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
+                    if(clipboardManager == null)
+                    {
+                        JSONObject o = ret_err(1);
+                        sendMessageToGame(callbacks,id,o.toString());
+                        return;
+                    }
+                    if(to)
+                    {
+                        if(!body.has("str"))
+                        {
+                            sendMessageToGame(callbacks,id,ret_err(1).toString());
+                            return;
+                        }
+                        String str = body.getString("str");
+                        ClipData mClipData = ClipData.newPlainText("str", str);
+                        clipboardManager.setPrimaryClip(mClipData);
+                        sendMessageToGame(callbacks,id,ret_err(0).toString());
+                    }else{
+                        String str = "";int v = 1;
+                        if(clipboardManager.hasPrimaryClip()) {
+                            ClipData clipData = clipboardManager.getPrimaryClip();
+                            //获取 text
+                            if(clipData != null && clipData.getItemCount() >= 1) {
+                                str = clipData.getItemAt(0).getText().toString();
+                                v = 0;
+                            }
+                        }
+                        JSONObject o = ret_err(v);
+                        o.put("str",str);
+                        sendMessageToGame(callbacks,id,o.toString());
+                    }
+                }
         }
 
         //if(is_destroy)
         //{
         //    rm(id);
         //}
+    }
+
+    private JSONObject ret_err(int v) throws JSONException {
+        JSONObject o = new JSONObject();
+        o.put("ret",v);
+        return o;
     }
 
     private void add(int id,MyCB cb) {
