@@ -339,6 +339,7 @@ public class LocalCacheMgr {
             }).start();
             return 0;
         } catch (IOException e) {
+            Log.e("LoadLocalConfig","err = " + e.getMessage());
             return -2;
         }
     }
