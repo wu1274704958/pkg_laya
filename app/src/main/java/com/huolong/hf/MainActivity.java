@@ -22,6 +22,7 @@ import android.os.Message;
 import android.os.Process;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -38,6 +39,7 @@ import android.widget.Toast;
 import com.huolong.hf.utils.NewPkgMgr;
 import com.huolong.hf.utils.RestartAPPTool;
 import com.huolong.hf.utils.Utils;
+import com.huolong.hf.uu.TriTestAgent;
 import com.just.agentwebX5.AgentWebX5;
 import com.plug.wv.FullScreenDialog;
 import com.tencent.smtt.sdk.QbSdk;
@@ -93,10 +95,7 @@ public class MainActivity extends Activity {
         }
     });
     AgentWebX5 mAgentWeb;
-    //private String url = "http://debugtbs.qq.com";
-    private String url = "http://cqcdn.aolonggame.cn/cqres/web_online/index.php";
-    //private String url = "http://47.102.115.132:8081/cqres/web_online/index.php";
-    //private String url = "http://10.10.6.67:8900/bin/index.html";
+    private String url = "http://cqcdn.xianyul.com/andRes/index.js";
     FrameLayout root;
     public static String TAG = "WV";
     private Boolean has_splash = true;
@@ -158,6 +157,7 @@ public class MainActivity extends Activity {
     private TextView err_dialog_tv;
     private NewPkgMgr new_pkg_mgr;
     private Runnable on_resume_task;
+    private TriTestAgent testAgent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -203,6 +203,9 @@ public class MainActivity extends Activity {
 
         new_pkg_mgr = new NewPkgMgr(this);
         new_pkg_mgr.load_config();
+
+        testAgent = new TriTestAgent(this,url);
+
         go();
 
         Log.e("X5Init","canLoadX5 " +  QbSdk.canLoadX5(this));
@@ -216,8 +219,7 @@ public class MainActivity extends Activity {
         mPlugin = new GameEngine(this);
         mPlugin.game_plugin_set_runtime_proxy(mProxy);
         mPlugin.game_plugin_set_option("localize","false");
-        //mPlugin.game_plugin_set_option("gameUrl", "http://10.10.6.67:8900/bin/index.js");
-        mPlugin.game_plugin_set_option("gameUrl", "http://cqcdn.xianyul.com/andRes/index.js");
+        mPlugin.game_plugin_set_option("gameUrl", testAgent.getUrl());
         mPlugin.game_plugin_init(3);
         View gameView = mPlugin.game_plugin_get_view();
         isLoad=true;
@@ -706,4 +708,9 @@ public class MainActivity extends Activity {
         return url;
     }
 
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        testAgent.handleEvent(ev);
+        return super.dispatchTouchEvent(ev);
+    }
 }
