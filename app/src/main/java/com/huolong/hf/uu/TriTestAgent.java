@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.view.MotionEvent;
 
+import com.huolong.hf.MainActivity;
+
 public class TriTestAgent {
     private Activity activity;
     private String url;
@@ -18,28 +20,49 @@ public class TriTestAgent {
             AlertDialog dialog = IpDialog.getDialog(activity, "保存", new IpDialog.OnGetIp() {
                 @Override
                 public void onGetIp(int ty,String ip, String port) {
+                    boolean exit = true;
                     if(ty == IpDialog.TypeIP_PORT)
                     {
-                        SharedPreferences mContextSp = activity.getSharedPreferences( SP_KEY, Context.MODE_PRIVATE );
-                        SharedPreferences.Editor editor = mContextSp.edit();
+                        SharedPreferences.Editor editor = getSpEditer();
                         editor.putString("ip",ip);
                         editor.putString("port",port);
                         editor.commit();
                     }else if(ty == IpDialog.TypeCOMMAND){
-                        if(ip .equals("origin"))
+                        String[] cmd = ip.split(" ");
+                        if(cmd[0].equals("origin"))
                         {
-                            SharedPreferences mContextSp = activity.getSharedPreferences( SP_KEY, Context.MODE_PRIVATE );
-                            SharedPreferences.Editor editor = mContextSp.edit();
+                            SharedPreferences.Editor editor = getSpEditer();
                             editor.clear();
                             editor.commit();
+                        }else
+                        if(cmd[0].equals("url") && cmd.length >= 2)
+                        {
+                            SharedPreferences.Editor editor = getSpEditer();
+                            editor.putString("url",cmd[1]);
+                            editor.commit();
+                        }else
+                        if(cmd[0].equals("hide_sp"))
+                        {
+                            ((MainActivity)activity).hide_splash();
+                            exit = false;
                         }
                     }
-                    System.exit(0);
+                    if(exit) System.exit(0);
                 }
             });
             dialog.show();
         }
     };
+
+    public SharedPreferences getSp()
+    {
+        return activity.getSharedPreferences( SP_KEY, Context.MODE_PRIVATE );
+    }
+
+    public SharedPreferences.Editor getSpEditer()
+    {
+        return activity.getSharedPreferences( SP_KEY, Context.MODE_PRIVATE ).edit();
+    }
 
     public TriTestAgent(Activity activity, String url)
     {
@@ -50,7 +73,12 @@ public class TriTestAgent {
 
     public String getUrl()
     {
-        SharedPreferences mContextSp = activity.getSharedPreferences( SP_KEY, Context.MODE_PRIVATE );
+        SharedPreferences mContextSp = getSp();
+        String override_url = mContextSp.getString("url","");
+        if(!override_url.isEmpty())
+        {
+            return override_url;
+        }
         String ip = mContextSp.getString("ip","");
         String port = mContextSp.getString("port","");
         if(!ip.isEmpty() && !port.isEmpty())

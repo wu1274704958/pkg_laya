@@ -219,7 +219,9 @@ public class MainActivity extends Activity {
         mPlugin = new GameEngine(this);
         mPlugin.game_plugin_set_runtime_proxy(mProxy);
         mPlugin.game_plugin_set_option("localize","false");
-        mPlugin.game_plugin_set_option("gameUrl", testAgent.getUrl());
+        String agentUrl = testAgent.getUrl();
+        Logw.e("agentUrl = " + agentUrl);
+        mPlugin.game_plugin_set_option("gameUrl", agentUrl);
         mPlugin.game_plugin_init(3);
         View gameView = mPlugin.game_plugin_get_view();
         isLoad=true;
@@ -291,7 +293,7 @@ public class MainActivity extends Activity {
         }).start();
     }
 
-    private void hide_splash()
+    public void hide_splash()
     {
         if(is_hide_splash) return;
         if(loding_time < 2000)
