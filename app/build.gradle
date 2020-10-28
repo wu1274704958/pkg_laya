@@ -19,7 +19,7 @@ android {
     compileSdkVersion 29
     buildToolsVersion "29.0.0"
     defaultConfig {
-        applicationId "one.huolong.online"
+        applicationId "com.gzlxq.yhcq"
         minSdkVersion 21
         targetSdkVersion 29
         versionCode 202010261
@@ -47,7 +47,7 @@ android {
     }
     android.applicationVariants.all { variant ->
         variant.outputs.all {
-            def apkName = "cq_native_${variant.applicationId}_${variant.versionName}"
+            def apkName = "cq_native_7r_${variant.applicationId}_${variant.versionName}"
             // 判断是否为空
             if (!variant.flavorName.isEmpty()) {
                 apkName += "_${variant.flavorName}"
@@ -77,8 +77,8 @@ dependencies {
     compile 'com.just.agentwebX5:agentwebX5:2.0.0'
 
     compile files('libs/tbs_sdk.jar')
+    compile (name:'qd',ext:'aar')
 
-    compile files('libs/layaconch.jar')
-
+    compile (name:'RDataSDK_v1.0.0',ext:'aar')
     implementation 'com.squareup.okhttp3:okhttp:3.12.12'
 }

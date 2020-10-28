@@ -30,7 +30,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import one.huolong.online.R;
+import com.gzlxq.yhcq.R;
 
 
 public class ExternCall {
