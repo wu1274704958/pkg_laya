@@ -17,18 +17,18 @@ public class MyApp extends Application {
         map.put(TbsCoreSettings.TBS_SETTINGS_USE_SPEEDY_CLASSLOADER, true);
         map.put(TbsCoreSettings.TBS_SETTINGS_USE_DEXLOADER_SERVICE, true);
         QbSdk.initTbsSettings(map);
-        QbSdk.setDownloadWithoutWifi(true);
-        QbSdk.initX5Environment(getApplicationContext(), new QbSdk.PreInitCallback() {
-            @Override
-            public void onCoreInitFinished() {
-                Log.e("X5Init","onCoreInitFinished");
-            }
-
-            @Override
-            public void onViewInitFinished(boolean b) {
-                Log.e("X5Init","onViewInitFinished " + b);
-            }
-        });
+        QbSdk.setDownloadWithoutWifi(false);
+//        QbSdk.initX5Environment(getApplicationContext(), new QbSdk.PreInitCallback() {
+//            @Override
+//            public void onCoreInitFinished() {
+//                Log.e("X5Init","onCoreInitFinished");
+//            }
+//
+//            @Override
+//            public void onViewInitFinished(boolean b) {
+//                Log.e("X5Init","onViewInitFinished " + b);
+//            }
+//        });
 
     }
 }

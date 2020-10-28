@@ -76,12 +76,7 @@ dependencies {
     //api 'com.just.agentweb:agentweb:4.1.3'
     compile 'com.just.agentwebX5:agentwebX5:2.0.0'
 
-    compile (name:'RangersAppLog-Lite-cn-3.3.12',ext:'aar')
-    compile (name:'oaid_sdk_1.0.22',ext:'aar')
-
     compile files('libs/tbs_sdk.jar')
-    compile files('libs/tracking1.6.6.jar')
-    compile files('libs/bcprov-jdk16-139.jar')
 
     compile files('libs/layaconch.jar')
 

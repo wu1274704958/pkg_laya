@@ -22,13 +22,6 @@ import android.content.Context;
 
 import androidx.core.app.ActivityCompat;
 
-import com.bytedance.applog.AppLog;
-import com.bytedance.applog.GameReportHelper;
-import com.bytedance.applog.InitConfig;
-import com.bytedance.applog.util.UriConfig;
-import com.plug.oaid.DeviceIdUtils;
-import com.plug.oaid.Oaid;
-import com.reyun.tracking.sdk.Tracking;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -395,26 +388,7 @@ public class QuickSdk{
     {
         Log.e("QuickSdk","init_");
         try {
-            final InitConfig config = new InitConfig("182083", "huolong03");
-            config.setUriConfig(UriConfig.DEFAULT);
-            config.setEnablePlay(true);
 
-            AppLog.setEnableLog(true);
-
-            AppLog.init(activity_, config);
-            /* 初始化结束 */
-
-            // ⾃定义 “⽤⼾公共属性”（可选，初始化后调⽤, key相同会覆盖）
-            HashMap<String, Object> headerMap = new HashMap<String, Object>();
-            headerMap.put("level",8);
-            headerMap.put("gender","female");
-            AppLog.setHeaderInfo(headerMap);
-
-            AppLog.setUserUniqueID(DeviceIdUtils.getDeviceId(activity_));
-            Log.e(TAG_HC,"init b");
-            Tracking.setDebugMode(true);
-            Tracking.initWithKeyAndChannelId(activity_.getApplication(),"f554949c3966bb1924195b8548896ea4","_default_");
-            Log.e(TAG_HC,"init e");
         }catch (Exception e)
         {
             Logw.e("init err = " + e.toString());
@@ -550,18 +524,14 @@ public class QuickSdk{
     }
 
     private static void register(Activity activity, String string,User u) {
-        GameReportHelper.onEventRegister(string,true);
         Log.e(TAG_HC,"register " + u.acc);
-        Tracking.setRegisterWithAccountID(u.acc);
     }
 
     public static void login(Activity activity,User u)
     {
         Logw.e("login b");
-        GameReportHelper.onEventLogin("",true);
         Logw.e("login e");
         Log.e(TAG_HC,"login " + u.acc);
-        Tracking.setLoginSuccessBusiness(u.acc);
     }
 
     public static void setGameRoleInfo(Activity activity,RoleInfo info,Boolean is_create,SetGameRoleInfoEx oths)
@@ -569,9 +539,9 @@ public class QuickSdk{
         Logw.e("setGameRoleInfo exec");
 
         if(is_create) {
-            GameReportHelper.onEventCreateGameRole(info.gameRoleID);
+
         }else{
-            GameReportHelper.onEventUpdateLevel(Integer.parseInt(info.gameRoleLevel));
+
         }
     }
 
@@ -588,23 +558,11 @@ public class QuickSdk{
     public static void pay(Activity activity,final Order order, ServerInfo serverInfo,JSONObject oths) throws JSONException {
         Logw.e("pay exec");
 
-        GameReportHelper.onEventPurchase("gift",order.goodsName,order.goodsID,
-                Integer.valueOf(order.count),oths.getString("channel"),"¥",true,Integer.valueOf(order.amount));
-        float amount = 0.f;
-        try {
-            amount = Float.parseFloat(order.amount);
-        }catch (Exception e){}
-        Log.e(TAG_HC,"pay " + order.cpOrderID + " " + oths.getString("channel")  + "CNY" + amount);
-        Tracking.setPayment(order.cpOrderID,oths.getString("channel"),"CNY",amount );
+
     }
 
     public static void onGenerateOrder(Activity activity,final Order order, ServerInfo serverInfo,JSONObject oths) throws JSONException {
-        float amount = 0.f;
-        try {
-            amount = Float.parseFloat(order.amount);
-        }catch (Exception e){}
-        Log.e(TAG_HC,"onGenerateOrder " + order.cpOrderID +  "CNY" + amount);
-        Tracking.setOrder(order.cpOrderID,"CNY" , amount);
+
     }
 
     public static <T> T formJson(Class<T> tClass,JSONObject object) throws JSONException, InstantiationException, IllegalAccessException, InvocationTargetException {
@@ -771,7 +729,6 @@ public class QuickSdk{
     public static void onPause(Activity activity) {
         long this_dur = thisTimesTime();
         Log.e(TAG_HC," setPageDuration " + activity.getClass().getName() + " " +this_dur);
-        Tracking.setPageDuration(activity.getClass().getName(),this_dur);
         play_time += this_dur;
     }
 
@@ -801,10 +758,6 @@ public class QuickSdk{
     public static void requestExit() {
 
         play_time += thisTimesTime();
-        Log.e(TAG_HC," setAppDuration " + play_time);
-        Tracking.setAppDuration(play_time);
-        Log.e(TAG_HC," exitSdk ");
-        Tracking.exitSdk();
     }
 
     public static void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)

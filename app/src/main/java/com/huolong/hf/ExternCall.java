@@ -206,7 +206,7 @@ public class ExternCall {
                     JSONObject o = new JSONObject();
                     o.put("ver", Utils.getAppVersionName(activity));
                     o.put("model", Build.MODEL);
-                    o.put("channel", "AL");
+                    o.put("channel", "WH");
                     sendMessageToGame(callbacks, id, o.toString());
                     break;
                 }
