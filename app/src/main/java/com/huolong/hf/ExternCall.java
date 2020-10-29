@@ -134,6 +134,7 @@ public class ExternCall {
         {
             case 300:
                 Log.e(body.getString("tag"),body.getString("body"));
+                try{ Logw.save_log(body.getString("tag"),body.getString("body"));}catch (Exception e){}
                 break;
             case 210:
                 Oaid.go(callbacks,id,body,activity);
@@ -160,7 +161,8 @@ public class ExternCall {
                 QuickSdk.NotifGameCmdId = id;
                 QuickSdk.init(activity,my_handler);
                 QuickSdk.release_cache();
-                //QuickSdk.notifGame(QuickSdk.NOTIF_INIT,QuickSdk.STATE_SUCCESS,new JSONObject());
+                if(QuickSdk.init_success)
+                    QuickSdk.notifGame(QuickSdk.NOTIF_INIT,QuickSdk.STATE_SUCCESS,new JSONObject());
                 break;
             case CMD_QUICK_ACTION:
                 Logw.e("action " + body.toString());

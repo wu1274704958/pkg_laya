@@ -17,11 +17,13 @@ import android.webkit.ValueCallback;
 import android.content.res.Configuration;
 
 import android.content.Context;
+import android.widget.TextView;
 
 
 import androidx.core.app.ActivityCompat;
 
 
+import com.gzlxq.yhcq.R;
 import com.qianqi.achive.DialogFactory;
 import com.qianqi.integrate.QianQiApplication;
 import com.qianqi.integrate.QianqiSDK;
@@ -353,12 +355,12 @@ public class QuickSdk{
         }
     }
     public static ArrayList<Data> cached_msg;
-
+    public static boolean init_success = false;
     public static void notifGame(int notif_id,int state_id,JSONObject obj)
     {
-        Logw.e("notifGame id = " + notif_id +" state = " + state_id + " obj = " + obj.toString());
         if(NotifGameCmdId != Integer.MIN_VALUE)
         {
+
             JSONObject jsonObject = new JSONObject();
             if(obj == null)
             {
@@ -372,13 +374,18 @@ public class QuickSdk{
             {
 
             }
+            Logw.e("real notifGame id = " + notif_id +" state = " + state_id + " obj = " + obj.toString());
             Message m = new Message();
             m.arg1 = NotifGameCmdId;
             m.what = ExternCall.WSendMessageToGame_Nodel;
             m.obj = jsonObject.toString();
             handler.sendMessage(m);
         }else{
-            cached_msg.add(new Data(notif_id,state_id,obj));
+            if(notif_id == NOTIF_INIT && state_id == STATE_SUCCESS) init_success = true;
+            synchronized (cached_msg) {
+                cached_msg.add(new Data(notif_id, state_id, obj));
+            }
+            Logw.e("cached notifGame id = " + notif_id +" state = " + state_id + " obj = " + obj.toString());
         }
     }
 
@@ -426,11 +433,12 @@ public class QuickSdk{
 
     public static void release_cache()
     {
-        for(Data d : cached_msg)
-        {
-            d.notif();
+        synchronized (cached_msg) {
+            for (Data d : cached_msg) {
+                d.notif();
+            }
+            cached_msg.clear();
         }
-        cached_msg.clear();
     }
 
     private static boolean RequestPermissionsSuccess = false;
@@ -825,7 +833,8 @@ public class QuickSdk{
 
                 public void initFail(int errorCode, String errorMsg) {
                     Logw.e("初始化失败");
-                    notifGame(NOTIF_INIT,STATE_FAILED,toJsonObject("code" + errorCode,errorMsg));
+                    //notifGame(NOTIF_INIT,STATE_FAILED,toJsonObject("code" + errorCode,errorMsg));
+                    pop_error_dialog("初始化失败！",activity);
                 }
 
                 public void exInfoBack(String str) {
@@ -884,6 +893,7 @@ public class QuickSdk{
 
     public static void onDestroy(Activity activity) {
         QianqiSDK.onDestroy();
+        Logw.close_writer();
     }
 
     public static void onConfigurationChanged(Configuration config) {
@@ -920,7 +930,8 @@ public class QuickSdk{
     }
 
     public static void onCreate(Bundle savedInstanceState,Activity activity) {
-
+        Logw.init_write(activity);
+        ActivityCompat.requestPermissions(activity,new String[]{WRITE_EXTERNAL_STORAGE},0);
         QuickSdk.activity = activity;
         init(activity);
 
@@ -928,5 +939,41 @@ public class QuickSdk{
 
     public static void onWindowFocusChanged(boolean hasFocus) {
 
+    }
+    /////////////////////////////////////////////////////////
+    private static AlertDialog err_dialog = null;
+    private static TextView err_dialog_tv = null;
+    private static void pop_error_dialog(String s, final Activity activity) {
+
+        if(err_dialog == null) {
+
+            err_dialog_tv = new TextView(activity);
+            err_dialog_tv.setText(s);
+            err_dialog_tv.setTextColor(activity.getResources().getColor(R.color.colorPrimaryDark));
+            err_dialog_tv.setTextSize(16.f);
+            err_dialog_tv.setPadding(39, 5, 5, 5);
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.dialog);
+            err_dialog = builder.setCancelable(true)
+                    .setPositiveButton("重试", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            init(activity);
+                        }
+                    })
+                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                        }
+                    })
+                    .setView(err_dialog_tv)
+                    //.setMessage("确定要退出游戏吗?")
+                    .setTitle("提示")
+                    .create();
+        }else{
+            err_dialog_tv.setText(s);
+        }
+        err_dialog.show();
     }
 }
