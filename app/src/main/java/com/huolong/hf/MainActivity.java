@@ -94,10 +94,10 @@ public class MainActivity extends Activity {
                     hide_splash();
                     break;
                 case 2:
-                    if(!new_pkg_mgr.is_network_busy()) {
-                        is_pop_longtime = true;
-                        pop_error_dialog("网络连接超时，请您检查网络状态!");
-                    }
+//                    if(!new_pkg_mgr.is_network_busy()) {
+//                        is_pop_longtime = true;
+//                        pop_error_dialog("网络连接超时，请您检查网络状态!");
+//                    }
                     break;
                 case 4:
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

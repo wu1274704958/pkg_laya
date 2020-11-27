@@ -46,6 +46,7 @@ public class JsCallAndroidInterface {
 
     @JavascriptInterface
     public void dismiss(final String data) {
+        Log.e(FullScreenDialog.TAG,"into dismiss()");
         deliver.post(new Runnable() {
             @Override
             public void run() {
