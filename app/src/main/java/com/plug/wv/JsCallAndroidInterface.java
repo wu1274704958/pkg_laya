@@ -55,4 +55,9 @@ public class JsCallAndroidInterface {
 
     }
 
+    @JavascriptInterface
+    public void log(final String data) {
+        Log.e(FullScreenDialog.TAG, "js log = " + data);
+    }
+
 }
