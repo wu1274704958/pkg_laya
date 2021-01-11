@@ -5,7 +5,6 @@ import layaair.game.IMarket.IPluginRuntimeProxy;
 import layaair.game.conch.ILayaEventListener;
 import layaair.game.conch.ILayaGameEgine;
 import layaair.game.conch.LayaConch5;
-import one.huolong.online.R;
 
 import android.app.Activity;
 import android.content.Context;
@@ -14,6 +13,8 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+
+import com.lscq.xianyu.R;
 
 public class GameEngine implements IPlugin {
 	private static final String TAG = "LayaGameEngine";
