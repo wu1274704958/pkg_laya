@@ -22,11 +22,11 @@ android {
         applicationId "com.lscq.xianyu"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 202010261
-        versionName "2.5.0"
+        versionCode 202101131
+        versionName "2.5.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         signingConfig signingConfigs.release
-
+        manifestPlaceholders.put("APPLOG_SCHEME","rangersapplog.byAx6uYt".toLowerCase())
         ndk { abiFilters  'armeabi-v7a','x86','arm64-v8a','x86_64','armeabi' }
     }
     sourceSets.main{
@@ -72,11 +72,12 @@ repositories {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'com.bytedance.applog:RangersAppLog-Lite-cn:5.3.0'
 
     //api 'com.just.agentweb:agentweb:4.1.3'
     compile 'com.just.agentwebX5:agentwebX5:2.0.0'
 
-    compile (name:'RangersAppLog-Lite-cn-3.3.12',ext:'aar')
+    //compile (name:'RangersAppLog-Lite-cn-3.3.12',ext:'aar')
     compile (name:'oaid_sdk_1.0.22',ext:'aar')
 
     compile files('libs/tbs_sdk.jar')

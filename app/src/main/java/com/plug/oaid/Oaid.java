@@ -52,28 +52,17 @@ public class Oaid {
     public static void go(final SparseArray<ValueCallback<JSONObject>> callbacks,
                           final int cmdid, JSONObject body, final Activity activity)
     {
+        JSONObject obj = new JSONObject();
+        String duid = DeviceIdUtils.getDeviceId(activity);
         try {
-            DevicesIDsHelper mDevicesIDsHelper =
-                    new DevicesIDsHelper(new DevicesIDsHelper.AppIdsUpdater() {
-                        @Override
-                        public void OnIdsAvalid(String oaid) {
-                            JSONObject obj = new JSONObject();
-                            try {
-                                String duid = DeviceIdUtils.getDeviceId(activity);
-                                obj.put("duid", duid == null ? "" : duid);
-                                obj.put("oaid", oaid == null ? "" : oaid);
-                                Log.e(TAG,obj.toString());
-                            } catch (Exception e) {
-                                Log.e(TAG, "err = " + e.getMessage());
-                            }
-                            sendMessageToGame(callbacks, cmdid, obj.toString());
-                        }
-                    });
-            mDevicesIDsHelper.getOAID(activity);
-        }catch (Exception e)
-        {
+            obj.put("duid", duid == null ? "" : duid);
+            obj.put("oaid", "" );
+        } catch (JSONException e) {
             Log.e(TAG, "err = " + e.getMessage());
         }
+        Log.e(TAG,obj.toString());
+        sendMessageToGame(callbacks, cmdid, obj.toString());
+
     }
 
 

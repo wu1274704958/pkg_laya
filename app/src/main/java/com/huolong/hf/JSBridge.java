@@ -42,7 +42,7 @@ public class JSBridge {
     }
 
     public static void gameCall(final String color) {
-        Logw.e(color + " " + (mMainActivity != null) );
+        Logw.e("js bridge gameCall()" + color + " " + (mMainActivity != null) );
         m_Handler.post(new Runnable() {
             @Override
             public void run() {

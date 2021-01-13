@@ -20,12 +20,15 @@ import android.content.res.Configuration;
 import android.content.Context;
 
 
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 
 import com.bytedance.applog.AppLog;
 import com.bytedance.applog.GameReportHelper;
+import com.bytedance.applog.ILogger;
+import com.bytedance.applog.IOaidObserver;
 import com.bytedance.applog.InitConfig;
-import com.bytedance.applog.util.UriConfig;
+import com.bytedance.applog.util.UriConstants;
 import com.plug.oaid.DeviceIdUtils;
 import com.plug.oaid.Oaid;
 import com.reyun.tracking.sdk.Tracking;
@@ -394,15 +397,34 @@ public class QuickSdk{
     public static void init_(Activity activity_)
     {
         Log.e("QuickSdk","init_");
-        try {
+        //try {
             final InitConfig config = new InitConfig("209718", "lscq");
-            config.setUriConfig(UriConfig.DEFAULT);
+            config.setUriConfig(UriConstants.DEFAULT);
             config.setEnablePlay(true);
+            config.setLogger(new ILogger() {
+                @Override
+                public void log(String s, Throwable throwable) {
+                    if(throwable != null)
+                    {
+                        Log.e("APPLOG",s + " " + throwable.getMessage());
+                    }else{
+                        Log.e("APPLOG",s );
+                    }
 
-            AppLog.setEnableLog(true);
+                }
+            }); // 是否在控制台输出⽇ 志，可⽤于观察⽤⼾⾏为⽇志上报情况，建议仅在调试时使⽤
+            config.setAbEnable(true); // 是否开启A/B Test功能
+            config.setAutoStart(true);
 
-            AppLog.init(activity_, config);
-            /* 初始化结束 */
+            AppLog.setOaidObserver(new IOaidObserver() {
+                @Override
+                public void onOaidLoaded(@NonNull Oaid oaid) {
+                    Logw.e("APPLOG_ID oaid = " + oaid);
+                    Logw.e("APPLOG_ID ssid = " + AppLog.getSsid());
+                    Logw.e("APPLOG_ID did = " + AppLog.getDid());
+                    Logw.e("APPLOG_ID iid = " + AppLog.getIid());
+                }
+            });
 
             // ⾃定义 “⽤⼾公共属性”（可选，初始化后调⽤, key相同会覆盖）
             HashMap<String, Object> headerMap = new HashMap<String, Object>();
@@ -410,15 +432,27 @@ public class QuickSdk{
             headerMap.put("gender","female");
             AppLog.setHeaderInfo(headerMap);
 
+            AppLog.init(activity_, config);
+            /* 初始化结束 */
+
             AppLog.setUserUniqueID(DeviceIdUtils.getDeviceId(activity_));
             Log.e(TAG_HC,"init b");
             Tracking.setDebugMode(true);
             Tracking.initWithKeyAndChannelId(activity_.getApplication(),"3873385500b912a380837fecfcf6bc8e","_default_");
             Log.e(TAG_HC,"init e");
-        }catch (Exception e)
-        {
-            Logw.e("init err = " + e.toString());
-        }
+
+
+            String ssid = AppLog.getSsid(); // 获取数说 ID
+            String did = AppLog.getDid(); // 获取服务端 device ID
+            String iid = AppLog.getIid();
+
+            Logw.e("APPLOG_ID ssid = " + ssid);
+            Logw.e("APPLOG_ID did = " + did);
+            Logw.e("APPLOG_ID iid = " + iid);
+//        }catch (Exception e)
+//        {
+//            Logw.e("init err = " + e.toString());
+//        }
     }
 
     private static boolean RequestPermissionsSuccess = false;
