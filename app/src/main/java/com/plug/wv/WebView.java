@@ -47,9 +47,12 @@ public class WebView {
     public static void go(final SparseArray<ValueCallback<JSONObject>> callbacks,
                           final int cmdid, JSONObject body, final Activity activity)
     {
+
         try{
+            Boolean has_exit = false;
             String vn = body.has("video_name") ? body.getString("video_name") : null;
-            FullScreenDialog d = new FullScreenDialog(activity, body.getString("url"), vn, new FullScreenDialog.OnWVCb() {
+            has_exit = body.has("has_exit") && body.getBoolean("has_exit");
+            FullScreenDialog d = new FullScreenDialog(activity, body.getString("url"), vn,has_exit,new FullScreenDialog.OnWVCb() {
                 @Override
                 public void onDismiss() {
                     sendMessageToGame(callbacks,cmdid,"{\"act\": \"dismiss\"}");

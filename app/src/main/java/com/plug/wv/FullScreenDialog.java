@@ -21,6 +21,7 @@ import android.widget.ImageView;
 import android.widget.VideoView;
 
 
+import com.huolong.hf.Logw;
 import com.just.agentwebX5.AgentWebX5;
 import com.tencent.smtt.export.external.interfaces.ConsoleMessage;
 import com.tencent.smtt.export.external.interfaces.JsResult;
@@ -34,12 +35,14 @@ import java.lang.reflect.Method;
  * Date is 2019/5/7
  **/
 public class FullScreenDialog extends Dialog {
+    private Boolean has_exit = false;
     AgentWebX5 mAgentWeb;
     private Context context;
     private AlertDialog alertDialog;
     private String url;
     VideoView iv;
     FrameLayout root;
+    View exit_view;
     private String video_name;
     public static String TAG = "WV";
     OnWVCb cb;
@@ -51,12 +54,13 @@ public class FullScreenDialog extends Dialog {
     }
 
 
-    public FullScreenDialog(Context context,String url,String video_name,OnWVCb cb) {
+    public FullScreenDialog(Context context,String url,String video_name,Boolean has_exit,OnWVCb cb) {
         super(context);
         this.context = context;
         this.url=url;
         this.video_name = video_name;
         this.cb = cb;
+        this.has_exit = has_exit;
     }
 
     int getId(String n,String ty)
@@ -131,6 +135,23 @@ public class FullScreenDialog extends Dialog {
             root.addView(iv, 1, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         }
 
+        ImageView btn_exit = findViewById(getId("btn_exit","id"));
+        if(btn_exit != null)
+        {
+
+            exit_view = root.getChildAt(0);
+            Logw.e("has exit btn" + has_exit + "  exit_view = " + (exit_view != null));
+            root.removeViewAt(0);
+
+            btn_exit.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    FullScreenDialog.this.dismiss();
+                }
+            });
+            btn_exit.setVisibility( has_exit ? View.VISIBLE : View.INVISIBLE );
+        }
+
         mAgentWeb = AgentWebX5.with((Activity) context)//传入Activity
                 .setAgentWebParent(root, root.getLayoutParams())//传入AgentWeb 的父控件 ，如果父控件为 RelativeLayout ， 那么第二参数需要传入 RelativeLayout.LayoutParams
                 .useDefaultIndicator()// 使用默认进度条
@@ -139,7 +160,11 @@ public class FullScreenDialog extends Dialog {
                 .createAgentWeb()//
                 .go(url);
 
-
+        if(exit_view != null)
+        {
+            Logw.e("add exit view ............");
+            root.addView(exit_view,new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        }
 
         Log.e(TAG,"root "+ root.getChildCount() + (root.getChildAt(0) instanceof ImageView));
 
